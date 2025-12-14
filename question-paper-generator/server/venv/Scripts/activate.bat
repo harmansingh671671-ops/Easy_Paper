@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Question paper\question-paper-generator\server\venv
+set VIRTUAL_ENV=C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv
 
 if not defined PROMPT set PROMPT=$P$G
 

@@ -35,7 +35,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Question paper\question-paper-generator\server\venv"
+VIRTUAL_ENV="C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
