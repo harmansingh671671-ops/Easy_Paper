@@ -8,10 +8,15 @@ from app.models.question import Question, QuestionCreate, QuestionType
 from datetime import datetime
 from uuid import uuid4
 
-# Test creating a question model
-test_question = QuestionCreate(
+print("=" * 60)
+print("Testing Pydantic Models")
+print("=" * 60)
+
+# Test 1: MCQ Question
+print("\n✅ Test 1: Creating MCQ Question")
+mcq_question = QuestionCreate(
     question_type=QuestionType.MCQ,
-    source="Test Source",
+    source="JEE 2022",
     subject="Mathematics",
     class_grade="12",
     topic="Calculus",
@@ -24,20 +29,68 @@ test_question = QuestionCreate(
     answer_text="$2x$",
     marks=2
 )
+print(f"   Type: {mcq_question.question_type}")
+print(f"   Subject: {mcq_question.subject}")
+print(f"   Answer: {mcq_question.answer_text}")
 
-print("✅ QuestionCreate model validated successfully!")
-print(f"Question Type: {test_question.question_type}")
-print(f"Subject: {test_question.subject}")
-print(f"Answer: {test_question.answer_text}")
+# Test 2: LONG Question with Answer
+print("\n✅ Test 2: Creating LONG Question (with final answer)")
+long_question = QuestionCreate(
+    question_type=QuestionType.LONG,
+    subject="Physics",
+    class_grade="12",
+    topic="Mechanics",
+    difficulty="HARD",
+    question_text="Calculate force on 2kg mass with 5 m/s² acceleration.",
+    answer_text="F = 10 N",
+    detailed_solution="Using F = ma: F = 2 × 5 = 10 N",
+    marks=5
+)
+print(f"   Type: {long_question.question_type}")
+print(f"   Final Answer: {long_question.answer_text}")
+print(f"   Has Solution: {'Yes' if long_question.detailed_solution else 'No'}")
 
-# Test response model
-test_response = Question(
+# Test 3: TRUE_FALSE Question
+print("\n✅ Test 3: Creating TRUE_FALSE Question")
+tf_question = QuestionCreate(
+    question_type=QuestionType.TRUE_FALSE,
+    subject="Biology",
+    class_grade="10",
+    topic="Cell Structure",
+    difficulty="EASY",
+    question_text="Mitochondria is the powerhouse of the cell.",
+    answer_text="True",
+    marks=1
+)
+print(f"   Type: {tf_question.question_type}")
+print(f"   Answer: {tf_question.answer_text}")
+
+# Test 4: FILL_BLANK Question
+print("\n✅ Test 4: Creating FILL_BLANK Question")
+fill_question = QuestionCreate(
+    question_type=QuestionType.FILL_BLANK,
+    subject="Chemistry",
+    class_grade="9",
+    topic="Photosynthesis",
+    difficulty="EASY",
+    question_text="Plants make food through _______.",
+    answer_text="photosynthesis",
+    marks=1
+)
+print(f"   Type: {fill_question.question_type}")
+print(f"   Answer: {fill_question.answer_text}")
+
+# Test 5: Response Model (with database fields)
+print("\n✅ Test 5: Creating Full Question Response Model")
+response = Question(
     id=uuid4(),
     created_at=datetime.now(),
     updated_at=datetime.now(),
-    **test_question.dict()
+    **mcq_question.dict()
 )
+print(f"   ID: {response.id}")
+print(f"   Created: {response.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
 
-print("\n✅ Question response model validated successfully!")
-print(f"ID: {test_response.id}")
-print(f"Created: {test_response.created_at}")
+print("\n" + "=" * 60)
+print("✅ ALL TESTS PASSED! Models are working correctly.")
+print("=" * 60)
