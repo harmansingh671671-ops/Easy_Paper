@@ -4,11 +4,13 @@ import questionService from './services/questionService';
 import FilterPanel from './components/FilterPanel';
 import QuestionCard from './components/QuestionCard';
 import { usePaper } from './contexts/PaperContext';
+import  PaperView  from './pages/PaperView';
 
 function App() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentView, setCurrentView] = useState('library'); // 'library' or 'paper'
   const [filters, setFilters] = useState({
     subject: '',
     class_grade: '',
@@ -86,8 +88,11 @@ function App() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+  return currentView === 'paper' ? (
+  <PaperView onBack={() => setCurrentView('library')} />
+) : (
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    {/* ... existing header and content ... */}
       {/* Header */}
       <header className="bg-white shadow-md sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -118,7 +123,10 @@ function App() {
                   {getTotalMarks()}
                 </p>
               </div>
-              <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+              <button 
+                onClick={() => setCurrentView('paper')}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
                 <FileText size={20} />
                 <span className="font-semibold">View Paper</span>
               </button>
