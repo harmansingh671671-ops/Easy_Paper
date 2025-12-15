@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Star, Plus, Check } from 'lucide-react';
 import { renderMath } from '../utils/mathRenderer';
-import { useCart } from '../contexts/CartContext';
+import { usePaper } from '../contexts/PaperContext';
 
 const QuestionCard = ({ question, onToggleStar }) => {
-  const { addToCart, isInCart } = useCart();
+  const { addToPaper, isInPaper } = usePaper();
   const [showSolution, setShowSolution] = useState(false);
-  const inCart = isInCart(question.id);
+  const inPaper = isInPaper(question.id);
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
@@ -148,18 +148,18 @@ const QuestionCard = ({ question, onToggleStar }) => {
         </button>
 
         <button
-          onClick={() => addToCart(question)}
-          disabled={inCart}
+          onClick={() => addToPaper(question)}
+          disabled={inPaper}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-            inCart
+            inPaper
               ? 'bg-green-100 text-green-700 cursor-not-allowed'
               : 'bg-indigo-600 text-white hover:bg-indigo-700'
           }`}
         >
-          {inCart ? (
+          {inPaper ? (
             <>
               <Check size={18} />
-              <span>In Cart</span>
+              <span>In Paper</span>
             </>
           ) : (
             <>

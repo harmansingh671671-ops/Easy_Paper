@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ShoppingCart, BookOpen } from 'lucide-react';
+import { FileText, BookOpen } from 'lucide-react';
 import questionService from './services/questionService';
 import FilterPanel from './components/FilterPanel';
 import QuestionCard from './components/QuestionCard';
-import { useCart } from './contexts/CartContext';
+import { usePaper } from './contexts/PaperContext';
 
 function App() {
   const [questions, setQuestions] = useState([]);
@@ -21,7 +21,7 @@ function App() {
   });
   const [totalQuestions, setTotalQuestions] = useState(0);
   
-  const { cartItems, getTotalMarks } = useCart();
+  const { PaperItems, getTotalMarks } = usePaper();
 
   // Fetch questions when filters change
   useEffect(() => {
@@ -104,12 +104,12 @@ function App() {
               </div>
             </div>
             
-            {/* Cart Summary */}
+            {/* Paper Summary */}
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <p className="text-sm text-gray-600">Questions in Paper</p>
                 <p className="text-2xl font-bold text-indigo-600">
-                  {cartItems.length}
+                  {PaperItems.length}
                 </p>
               </div>
               <div className="text-right">
@@ -119,8 +119,8 @@ function App() {
                 </p>
               </div>
               <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                <ShoppingCart size={20} />
-                <span className="font-semibold">View Cart</span>
+                <FileText size={20} />
+                <span className="font-semibold">View Paper</span>
               </button>
             </div>
           </div>
