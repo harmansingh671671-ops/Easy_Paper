@@ -1,0 +1,6 @@
+.env
+venv/
+__pycache__/
+*.pyc
+question-paper-generator/server/venv/
+question-paper-generator/server/.env
