@@ -27,8 +27,19 @@ const QuestionCard = ({ question, onToggleStar }) => {
     }
   };
 
+  const handleCardClick = (e) => {
+    // Prevent card click from triggering when clicking on a button or the solution toggle
+    if (e.target.closest('button') || e.target.closest('a')) {
+      return;
+    }
+    addToPaper(question);
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6">
+    <div 
+      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 cursor-pointer"
+      onClick={handleCardClick}
+    >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         
@@ -106,7 +117,7 @@ const QuestionCard = ({ question, onToggleStar }) => {
       {question.question_type === 'LONG' && question.detailed_solution && (
         <div className="mb-4">
           <button
-            onClick={() => setShowSolution(!showSolution)}
+            onClick={(e) => { e.stopPropagation(); setShowSolution(!showSolution); }}
             className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
           >
             {showSolution ? '▼ Hide Solution' : '▶ Show Solution'}
@@ -134,7 +145,7 @@ const QuestionCard = ({ question, onToggleStar }) => {
       {/* Footer - Actions */}
       <div className="flex items-center justify-between pt-3 border-t border-gray-200">
         <button
-          onClick={() => onToggleStar(question.id)}
+          onClick={(e) => { e.stopPropagation(); onToggleStar(question.id); }}
           className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
             question.is_starred
               ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
@@ -147,13 +158,11 @@ const QuestionCard = ({ question, onToggleStar }) => {
           </span>
         </button>
 
-        <button
-          onClick={() => addToPaper(question)}
-          disabled={inPaper}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+        <div
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${
             inPaper
-              ? 'bg-green-100 text-green-700 cursor-not-allowed'
-              : 'bg-indigo-600 text-white hover:bg-indigo-700'
+              ? 'bg-green-100 text-green-700'
+              : 'bg-indigo-100 text-indigo-700'
           }`}
         >
           {inPaper ? (
@@ -167,7 +176,7 @@ const QuestionCard = ({ question, onToggleStar }) => {
               <span>Add to Paper</span>
             </>
           )}
-        </button>
+        </div>
       </div>
     </div>
   );

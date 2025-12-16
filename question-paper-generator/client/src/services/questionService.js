@@ -81,15 +81,31 @@ const questionService = {
   },
 
   // Get statistics
-  getStatistics: async () => {
-    try {
-      const response = await api.get('/questions/stats/overview');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching statistics:', error);
-      throw error;
-    }
-  },
-};
-
-export default questionService;
+    getStatistics: async () => {
+      try {
+        const response = await api.get('/questions/stats/overview');
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching statistics:', error);
+        throw error;
+      }
+    },
+  
+    // Generate PDF from question IDs
+    generatePdf: async (questionIds, title = 'Question Paper') => {
+      try {
+        const response = await api.post(
+          '/questions/generate-pdf',
+          { question_ids: questionIds, title },
+          { responseType: 'blob' } // Important for file downloads
+        );
+        return response.data;
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        throw error;
+      }
+    },
+  };
+  
+  export default questionService;
+  
