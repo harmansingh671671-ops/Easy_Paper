@@ -5,6 +5,7 @@ import FilterPanel from './components/FilterPanel';
 import QuestionCard from './components/QuestionCard';
 import { usePaper } from './contexts/PaperContext';
 import  PaperView  from './pages/PaperView';
+import CreateQuestionModal from './components/CreateQuestionModal';
 
 function App() {
   const [questions, setQuestions] = useState([]);
@@ -22,8 +23,9 @@ function App() {
     page_size: 20,
   });
   const [totalQuestions, setTotalQuestions] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
-  const { PaperItems, getTotalMarks } = usePaper();
+  const { paperQuestions, getTotalMarks } = usePaper();
 
   // Fetch questions when filters change
   useEffect(() => {
@@ -88,11 +90,16 @@ function App() {
     }
   };
 
+  const handleQuestionCreated = (newQuestion) => {
+    setTotalQuestions(prev => prev + 1);
+    setQuestions(prev => [newQuestion, ...prev]);
+  }
+
   return currentView === 'paper' ? (
-  <PaperView onBack={() => setCurrentView('library')} />
-) : (
-  <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-    {/* ... existing header and content ... */}
+    <PaperView onBack={() => setCurrentView('library')} />
+  ) : (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* ... existing header and content ... */}
       {/* Header */}
       <header className="bg-white shadow-md sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -114,7 +121,7 @@ function App() {
               <div className="text-right">
                 <p className="text-sm text-gray-600">Questions in Paper</p>
                 <p className="text-2xl font-bold text-indigo-600">
-                  {PaperItems.length}
+                  {paperQuestions.length}
                 </p>
               </div>
               <div className="text-right">
@@ -142,6 +149,7 @@ function App() {
           filters={filters}
           onFilterChange={handleFilterChange}
           onClearFilters={handleClearFilters}
+          openCreateModal={() => setIsModalOpen(true)}
         />
 
         {/* Loading State */}
@@ -185,6 +193,12 @@ function App() {
           </>
         )}
       </main>
+
+      <CreateQuestionModal
+        isOpen={isModalOpen}
+        onRequestClose={() => setIsModalOpen(false)}
+        onQuestionCreated={handleQuestionCreated}
+      />
     </div>
   );
 }

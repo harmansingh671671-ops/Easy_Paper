@@ -9,45 +9,51 @@ export const usePaper = () => {
   }
   return context;
 };
-
+  
 export const PaperProvider = ({ children }) => {
-  const [PaperItems, setPaperItems] = useState([]);
-
+  const [paperQuestions, setPaperQuestions] = useState([]);
+  const reorderQuestions = (startIndex, endIndex) => {
+    const result = Array.from(paperQuestions);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+    setPaperQuestions(result);
+  };
   const addToPaper = (question) => {
     // Check if already in Paper
-    if (PaperItems.find(item => item.id === question.id)) {
+    if (paperQuestions.find(item => item.id === question.id)) {
       alert('Question already in Paper!');
       return;
     }
     
-    setPaperItems([...PaperItems, question]);
+    setPaperQuestions([...paperQuestions, question]);
   };
 
   const removeFromPaper = (questionId) => {
-    setPaperItems(PaperItems.filter(item => item.id !== questionId));
+    setPaperQuestions(paperQuestions.filter(item => item.id !== questionId));
   };
 
   const clearPaper = () => {
-    setPaperItems([]);
+    setPaperQuestions([]);
   };
 
   const isInPaper = (questionId) => {
-    return PaperItems.some(item => item.id === questionId);
+    return paperQuestions.some(item => item.id === questionId);
   };
 
   const getTotalMarks = () => {
-    return PaperItems.reduce((total, item) => total + item.marks, 0);
+    return paperQuestions.reduce((total, item) => total + item.marks, 0);
   };
 
   return (
     <PaperContext.Provider
       value={{
-        PaperItems,
+        paperQuestions,
         addToPaper,
         removeFromPaper,
         clearPaper,
         isInPaper,
         getTotalMarks,
+        reorderQuestions
       }}
     >
       {children}

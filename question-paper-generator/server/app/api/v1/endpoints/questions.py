@@ -1,6 +1,9 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional
 from uuid import UUID
+from fastapi.responses import StreamingResponse
+from app.services.pdf_service import PDFService
+import io
 from app.models.question import (
     Question, 
     QuestionCreate, 
@@ -152,3 +155,29 @@ async def get_statistics(
     """Get statistics about questions (counts by type, subject, difficulty, etc.)"""
     stats = await service.get_statistics()
     return stats
+
+@router.post("/generate-pdf")
+async def generate_pdf(
+    question_ids: list[str],
+    title: str = "Question Paper",
+    service: QuestionService = Depends(get_question_service)
+):
+    """Generate PDF from selected questions"""
+    questions_data = []
+    
+    for qid in question_ids:
+        q = await service.get_question_by_id(qid)
+        if q:
+            questions_data.append(q)
+    
+    if not questions_data:
+        raise HTTPException(status_code=400, detail="No valid questions provided")
+    
+    pdf_service = PDFService()
+    pdf_bytes = pdf_service.generate_pdf(questions_data, title)
+    
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=question_paper.pdf"}
+    )

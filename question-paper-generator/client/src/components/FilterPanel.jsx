@@ -1,7 +1,7 @@
 import React from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X, Plus } from 'lucide-react';
 
-const FilterPanel = ({ filters, onFilterChange, onSearch, onClearFilters }) => {
+const FilterPanel = ({ filters, onFilterChange, onClearFilters, openCreateModal }) => {
   const subjects = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English'];
   const classes = ['8', '9', '10', '11', '12'];
   const difficulties = ['EASY', 'MEDIUM', 'HARD'];
@@ -12,13 +12,22 @@ const FilterPanel = ({ filters, onFilterChange, onSearch, onClearFilters }) => {
     <div className="bg-white rounded-lg shadow p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gray-800">Filters</h2>
-        <button
-          onClick={onClearFilters}
-          className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
-        >
-          <X size={16} />
-          Clear All
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onClearFilters}
+            className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
+          >
+            <X size={16} />
+            Clear All
+          </button>
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            <Plus size={18} />
+            <span className="font-semibold">Create Question</span>
+          </button>
+        </div>
       </div>
 
       {/* Search Bar */}

@@ -1,8 +1,26 @@
+import os
+import sys
+
+# Add GTK3 to PATH for WeasyPrint
+if os.name == 'nt': # Check if on Windows
+    print("Searching for GTK3 installation...")
+    possible_paths = [
+        r'C:\msys64\ucrt64\bin',
+        r'C:\msys64\mingw64\bin',
+    ]
+    for path in possible_paths:
+        if os.path.isdir(path) and path not in os.environ['PATH']:
+            print(f"Found GTK3 at {path}, adding to PATH.")
+            os.environ['PATH'] = path + os.pathsep + os.environ['PATH']
+            break
+    else:
+        print("GTK3 not found in common locations. Please ensure GTK3 is installed and in your PATH.")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import os
 from dotenv import load_dotenv
 from app.api.v1.api import api_router
+
 
 # Load environment variables
 load_dotenv()
@@ -18,7 +36,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
