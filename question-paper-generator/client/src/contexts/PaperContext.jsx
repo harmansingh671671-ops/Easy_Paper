@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import questionService from '../services/questionService';
 
 const PaperContext = createContext();
 
@@ -44,6 +45,23 @@ export const PaperProvider = ({ children }) => {
     return paperQuestions.reduce((total, item) => total + item.marks, 0);
   };
 
+  const updateQuestionMarks = async (questionId, newMarks) => {
+    try {
+      // Optimistically update the UI
+      const updatedQuestions = paperQuestions.map(q => 
+        q.id === questionId ? { ...q, marks: newMarks } : q
+      );
+      setPaperQuestions(updatedQuestions);
+
+      // Persist the change to the backend
+      await questionService.updateQuestion(questionId, { marks: newMarks });
+    } catch (error) {
+      console.error('Failed to update marks:', error);
+      // Optionally, revert the change in UI
+      // For now, we'll just log the error
+    }
+  };
+
   return (
     <PaperContext.Provider
       value={{
@@ -53,7 +71,8 @@ export const PaperProvider = ({ children }) => {
         clearPaper,
         isInPaper,
         getTotalMarks,
-        reorderQuestions
+        reorderQuestions,
+        updateQuestionMarks,
       }}
     >
       {children}
