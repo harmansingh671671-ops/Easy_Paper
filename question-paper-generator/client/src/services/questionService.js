@@ -17,7 +17,7 @@ const questionService = {
       if (filters.is_starred !== undefined) params.append('is_starred', filters.is_starred);
       if (filters.search) params.append('search', filters.search);
       
-      const response = await api.get(`/questions?${params.toString()}`);
+      const response = await api.get(`/questions/?${params.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching questions:', error);

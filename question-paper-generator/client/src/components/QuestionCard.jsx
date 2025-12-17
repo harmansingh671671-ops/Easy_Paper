@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Star, Plus, Check } from 'lucide-react';
-import { renderMath } from '../utils/mathRenderer';
+import { Star, Plus, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { MathText } from '../utils/mathRenderer';
 import { usePaper } from '../contexts/PaperContext';
 
 const QuestionCard = ({ question, onToggleStar }) => {
   const { addToPaper, isInPaper } = usePaper();
   const [showSolution, setShowSolution] = useState(false);
+  const [isAnswerVisible, setIsAnswerVisible] = useState(false); // New state for answer visibility
   const inPaper = isInPaper(question.id);
 
   const getDifficultyColor = (difficulty) => {
@@ -34,6 +35,8 @@ const QuestionCard = ({ question, onToggleStar }) => {
     }
     addToPaper(question);
   };
+
+  console.log("Raw question text:", question.question_text);
 
   return (
     <div 
@@ -69,7 +72,7 @@ const QuestionCard = ({ question, onToggleStar }) => {
 
       {/* Question Text */}
       <div className="text-gray-800 font-medium mb-4">
-        {renderMath(question.question_text)}
+        <MathText>{question.question_text}</MathText>
       </div>
 
       {/* Question Body - Polymorphic Based on Type */}
@@ -89,7 +92,7 @@ const QuestionCard = ({ question, onToggleStar }) => {
                   {opt.toUpperCase()}.
                 </span>
                 <div className="flex-1">
-                  {renderMath(optionValue)}
+                  <MathText>{optionValue}</MathText>
                 </div>
               </div>
             );
@@ -114,31 +117,34 @@ const QuestionCard = ({ question, onToggleStar }) => {
         </div>
       )}
 
-      {question.question_type === 'LONG' && question.detailed_solution && (
-        <div className="mb-4">
+      {/* Answer (shown for all except LONG without answer_text) */}
+      {(question.answer_text || (question.question_type === 'LONG' && question.detailed_solution)) && (
+        <div className="mb-4 pt-3 border-t border-gray-200">
           <button
-            onClick={(e) => { e.stopPropagation(); setShowSolution(!showSolution); }}
-            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+            onClick={(e) => { e.stopPropagation(); setIsAnswerVisible(!isAnswerVisible); }}
+            className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
           >
-            {showSolution ? '▼ Hide Solution' : '▶ Show Solution'}
+            {isAnswerVisible ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            {isAnswerVisible ? 'Hide Answer' : 'Show Answer'}
           </button>
-          {showSolution && (
+          {isAnswerVisible && (
             <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-100">
-              <div className="text-sm text-gray-700">
-                {renderMath(question.detailed_solution)}
-              </div>
+              {question.answer_text && (
+                <div className="text-sm text-gray-700">
+                  <span className="font-semibold text-green-700">Answer: </span>
+                  <span className="text-sm text-green-600">
+                    <MathText>{question.answer_text}</MathText>
+                  </span>
+                </div>
+              )}
+              {question.question_type === 'LONG' && question.detailed_solution && (
+                <div className="text-sm text-gray-700 mt-2">
+                  <span className="font-semibold text-blue-700">Detailed Solution: </span>
+                  <MathText>{question.detailed_solution}</MathText>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
-
-      {/* Answer (shown for all except LONG without answer_text) */}
-      {question.answer_text && (
-        <div className="mb-4 pt-3 border-t border-gray-200">
-          <span className="text-sm font-semibold text-green-700">Answer: </span>
-          <span className="text-sm text-green-600">
-            {renderMath(question.answer_text)}
-          </span>
         </div>
       )}
 
