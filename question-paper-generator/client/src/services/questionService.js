@@ -92,11 +92,11 @@ const questionService = {
     },
   
     // Generate PDF from question IDs
-    generatePdf: async (questionIds, title = 'Question Paper') => {
+    generatePdf: async (questionIds, title) => {
       try {
         const response = await api.post(
           '/questions/generate-pdf',
-          { question_ids: questionIds, title },
+          { question_ids: questionIds, title: title },
           { responseType: 'blob' } // Important for file downloads
         );
         return response.data;

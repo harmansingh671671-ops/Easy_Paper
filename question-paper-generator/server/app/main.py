@@ -1,6 +1,11 @@
 import os
 import sys
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+from app.api.v1.api import api_router
+
 # Add GTK3 to PATH for WeasyPrint
 if os.name == 'nt': # Check if on Windows
     print("Searching for GTK3 installation...")
@@ -15,12 +20,6 @@ if os.name == 'nt': # Check if on Windows
             break
     else:
         print("GTK3 not found in common locations. Please ensure GTK3 is installed and in your PATH.")
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
-from app.api.v1.api import api_router
-
 
 # Load environment variables
 load_dotenv()

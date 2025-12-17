@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi.responses import StreamingResponse
 from app.services.pdf_service import PDFService
 import io
+from app.schemas.pdf_request import PDFRequest
 from app.models.question import (
     Question, 
     QuestionCreate, 
@@ -158,15 +159,14 @@ async def get_statistics(
 
 @router.post("/generate-pdf")
 async def generate_pdf(
-    question_ids: list[str],
-    title: str = "Question Paper",
+    request: PDFRequest,
     service: QuestionService = Depends(get_question_service)
 ):
     """Generate PDF from selected questions"""
     questions_data = []
     
-    for qid in question_ids:
-        q = await service.get_question_by_id(qid)
+    for qid in request.question_ids:
+        q = await service.get_question_by_id(UUID(qid))
         if q:
             questions_data.append(q)
     
@@ -174,7 +174,7 @@ async def generate_pdf(
         raise HTTPException(status_code=400, detail="No valid questions provided")
     
     pdf_service = PDFService()
-    pdf_bytes = pdf_service.generate_pdf(questions_data, title)
+    pdf_bytes = pdf_service.generate_pdf(questions_data, request.title)
     
     return StreamingResponse(
         io.BytesIO(pdf_bytes),

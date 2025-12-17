@@ -8,3 +8,5 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 weasyprint==60.1
 python-multipart==0.0.6
+beautifulsoup4
+latex2mathml

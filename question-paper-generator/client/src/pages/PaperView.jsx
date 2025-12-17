@@ -8,7 +8,7 @@ import { CSS } from '@dnd-kit/utilities';
 import questionService from '../services/questionService';
 
 const PaperView = ({ onBack }) => {
-  const { paperQuestions, removeFromPaper, clearPaper, getTotalMarks, reorderQuestions } = usePaper();
+  const { paperQuestions, removeFromPaper, clearPaper, getTotalMarks, reorderQuestions, updateQuestionMarks } = usePaper();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
  
   const sensors = useSensors(
@@ -54,6 +54,21 @@ const PaperView = ({ onBack }) => {
   const SortableQuestion = ({ question, index }) => {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: question.id });
     const style = { transform: CSS.Transform.toString(transform), transition };
+    const [currentMarks, setCurrentMarks] = useState(question.marks);
+
+    const handleMarksChange = (e) => {
+      setCurrentMarks(parseInt(e.target.value, 10));
+    };
+
+    const handleMarksBlur = () => {
+      if (currentMarks !== question.marks && currentMarks > 0) {
+        updateQuestionMarks(question.id, currentMarks);
+      } else if (currentMarks <= 0) {
+        // Reset to original marks if value is invalid
+        setCurrentMarks(question.marks);
+      }
+    };
+
 
     return (
       <div ref={setNodeRef} style={style} className="bg-white rounded-lg shadow p-6">
@@ -64,16 +79,22 @@ const PaperView = ({ onBack }) => {
           </div>
 
           <div className="flex-1">
-            <div className="flex gap-2 mb-3">
+            <div className="flex gap-2 mb-3 items-center">
               <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-xs font-semibold">
                 {question.subject}
               </span>
               <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs">
                 {question.question_type}
               </span>
-              <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">
-                {question.marks} marks
-              </span>
+              <input
+                type="number"
+                value={currentMarks}
+                onChange={handleMarksChange}
+                onBlur={handleMarksBlur}
+                className="w-16 px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
+                min="1"
+              />
+               <span className="text-xs text-gray-500">marks</span>
             </div>
 
             <div className="text-gray-800">

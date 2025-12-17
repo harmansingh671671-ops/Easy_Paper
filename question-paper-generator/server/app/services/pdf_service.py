@@ -1,5 +1,7 @@
 from weasyprint import HTML, CSS
 from datetime import datetime
+from bs4 import BeautifulSoup
+from latex2mathml.converter import convert
 import tempfile
 import os
 
@@ -14,12 +16,6 @@ class PDFService:
 <html>
 <head>
     <meta charset="UTF-8">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-    <script type="text/x-mathjax-config">
-        MathJax.Hub.Config({
-            tex2jax: {inlineMath: [['$','$']], displayMath: [['$$','$$']]}
-        });
-    </script>
 </head>
 <body>
     <div class="paper">
@@ -56,6 +52,26 @@ class PDFService:
         .option { margin-bottom: 5px; }
         """
     
+    def _render_math(self, html_content):
+        soup = BeautifulSoup(html_content, 'html.parser')
+        for text_node in soup.find_all(text=True):
+            if '$' in text_node:
+                parts = text_node.split('$')
+                new_content = []
+                for i, part in enumerate(parts):
+                    if i % 2 == 1:
+                        try:
+                            mathml = convert(part)
+                            new_content.append(mathml)
+                        except:
+                            new_content.append(f'${part}$')
+                    elif part:
+                        new_content.append(part)
+                
+                new_node = BeautifulSoup("".join(new_content), 'html.parser')
+                text_node.replace_with(new_node)
+        return str(soup)
+
     def generate_pdf(self, questions, title="Question Paper"):
         questions_html = ""
         
@@ -80,6 +96,8 @@ class PDFService:
         html_content = html_content.replace('{{total_questions}}', str(len(questions)))
         html_content = html_content.replace('{{date}}', datetime.now().strftime('%d-%m-%Y'))
         html_content = html_content.replace('{{questions_html}}', questions_html)
+
+        html_content_with_math = self._render_math(html_content)
         
-        pdf_bytes = HTML(string=html_content).write_pdf(stylesheets=[CSS(string=self.styles)])
+        pdf_bytes = HTML(string=html_content_with_math).write_pdf(stylesheets=[CSS(string=self.styles)])
         return pdf_bytes
