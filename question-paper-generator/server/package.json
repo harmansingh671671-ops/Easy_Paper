@@ -1,0 +1,9 @@
+{
+  "name": "server-katex-renderer",
+  "version": "1.0.0",
+  "description": "KaTeX renderer for the server",
+  "main": "app/services/render_katex.js",
+  "dependencies": {
+    "katex": "^0.16.10"
+  }
+}

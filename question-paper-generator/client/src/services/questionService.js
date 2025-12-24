@@ -16,6 +16,7 @@ const questionService = {
       if (filters.question_type) params.append('question_type', filters.question_type);
       if (filters.is_starred !== undefined) params.append('is_starred', filters.is_starred);
       if (filters.search) params.append('search', filters.search);
+      if (filters.category) params.append('category', filters.category);
       
       const response = await api.get(`/questions/?${params.toString()}`);
       return response.data;

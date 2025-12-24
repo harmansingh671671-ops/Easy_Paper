@@ -19,6 +19,7 @@ class QuestionBase(BaseModel):
     class_grade: str = Field(..., min_length=1, max_length=20)
     topic: str = Field(..., min_length=1, max_length=200)
     difficulty: str = Field(default="MEDIUM", max_length=20)
+    category: Optional[str] = Field(None, max_length=20)  # college, school, competition
     
     # Question content
     question_text: str = Field(..., min_length=1)
@@ -52,6 +53,7 @@ class QuestionUpdate(BaseModel):
     class_grade: Optional[str] = None
     topic: Optional[str] = None
     difficulty: Optional[str] = None
+    category: Optional[str] = None
     question_text: Optional[str] = None
     image_url: Optional[str] = None
     option_a: Optional[str] = None
@@ -84,6 +86,7 @@ class QuestionFilter(BaseModel):
     question_type: Optional[QuestionType] = None
     is_starred: Optional[bool] = None
     search: Optional[str] = None  # For searching in question_text
+    category: Optional[str] = None  # Filter by category (college, school, competition)
 
 # List Response Model (for paginated results)
 class QuestionListResponse(BaseModel):

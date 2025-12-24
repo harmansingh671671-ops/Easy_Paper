@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuth } from '@clerk/clerk-react';
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -8,9 +9,11 @@ const api = axios.create({
   },
 });
 
-// Add request interceptor for logging (optional)
+// Function to get Clerk token (will be called from components)
+
+// Add request interceptor for authentication
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
