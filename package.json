@@ -1,5 +1,10 @@
 {
   "dependencies": {
+    "pdfplumber": "^0.0.1-security",
     "react-modal": "^3.16.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.2",
+    "vite": "^7.3.0"
   }
 }

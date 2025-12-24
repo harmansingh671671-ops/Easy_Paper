@@ -34,6 +34,7 @@ async def get_questions(
     question_type: Optional[QuestionType] = None,
     is_starred: Optional[bool] = None,
     search: Optional[str] = None,
+    category: Optional[str] = None,
     service: QuestionService = Depends(get_question_service)
 ):
     """
@@ -57,7 +58,8 @@ async def get_questions(
         difficulty=difficulty,
         question_type=question_type,
         is_starred=is_starred,
-        search=search
+        search=search,
+        category=category
     )
     
     # Get questions
@@ -89,25 +91,6 @@ async def get_question(
         raise HTTPException(status_code=404, detail="Question not found")
     
     return Question(**question_data)
-
-@router.post("/", response_model=Question, status_code=201)
-async def create_question(
-    question: QuestionCreate,
-    service: QuestionService = Depends(get_question_service)
-):
-    """
-    Create a new question.
-    
-    - For **MCQ**: Provide option_a, option_b, option_c, option_d, and answer_text (full correct option text)
-    - For **LONG**: Provide question_text, optional answer_text (final answer), and detailed_solution
-    - For **TRUE_FALSE**: Provide question_text and answer_text ("True" or "False")
-    - For **FILL_BLANK**: Provide question_text with _______ and answer_text (the answer)
-    """
-    try:
-        question_data = await service.create_question(question)
-        return Question(**question_data)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to create question: {str(e)}")
 
 @router.put("/{question_id}", response_model=Question)
 async def update_question(
@@ -147,6 +130,15 @@ async def toggle_star_question(
     if not question_data:
         raise HTTPException(status_code=404, detail="Question not found")
     
+    return Question(**question_data)
+
+@router.post("/", response_model=Question, status_code=201)
+async def create_question(
+    question: QuestionCreate,
+    service: QuestionService = Depends(get_question_service)
+):
+    """Create a new question"""
+    question_data = await service.create_question(question)
     return Question(**question_data)
 
 @router.get("/stats/overview")

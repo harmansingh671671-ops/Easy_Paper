@@ -1,5 +1,5 @@
 from supabase import Client
-from app.models.question import Question, QuestionCreate, QuestionUpdate, QuestionFilter
+from app.models.question import QuestionCreate, QuestionUpdate, QuestionFilter
 from typing import List, Optional
 from uuid import UUID
 
@@ -35,6 +35,8 @@ class QuestionService:
                 query = query.eq("is_starred", filters.is_starred)
             if filters.search:
                 query = query.ilike("question_text", f"%{filters.search}%")
+            if filters.category:
+                query = query.eq("category", filters.category)
         
         # Apply pagination
         offset = (page - 1) * page_size
@@ -63,7 +65,7 @@ class QuestionService:
     
     async def create_question(self, question: QuestionCreate) -> dict:
         """Create a new question"""
-        question_dict = question.dict(exclude_unset=True)
+        question_dict = question.model_dump(exclude_unset=True)
         
         # Convert enum to string
         if "question_type" in question_dict:
@@ -77,7 +79,7 @@ class QuestionService:
     
     async def update_question(self, question_id: UUID, question: QuestionUpdate) -> Optional[dict]:
         """Update an existing question"""
-        update_data = question.dict(exclude_unset=True)
+        update_data = question.model_dump(exclude_unset=True)
         
         # Convert enum to string if present
         if "question_type" in update_data:

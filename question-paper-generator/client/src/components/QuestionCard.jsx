@@ -3,7 +3,7 @@ import { Star, Plus, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { MathText } from '../utils/mathRenderer';
 import { usePaper } from '../contexts/PaperContext';
 
-const QuestionCard = ({ question, onToggleStar }) => {
+const QuestionCard = ({ question, onToggleStar, onDelete }) => {
   const { addToPaper, isInPaper } = usePaper();
   const [showSolution, setShowSolution] = useState(false);
   const [isAnswerVisible, setIsAnswerVisible] = useState(false); // New state for answer visibility
@@ -61,9 +61,9 @@ const QuestionCard = ({ question, onToggleStar }) => {
           </span>
           {question.source && (
             <span className="px-3 py-1 bg-cyan-100 text-cyan-800 rounded-full text-xs">
-                📚 {question.source}
+              📚 {question.source}
             </span>
-        )}
+          )}
         </div>
         <span className="text-sm font-bold text-gray-700 whitespace-nowrap ml-2">
           {question.marks} {question.marks === 1 ? 'mark' : 'marks'}
@@ -150,19 +150,32 @@ const QuestionCard = ({ question, onToggleStar }) => {
 
       {/* Footer - Actions */}
       <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-        <button
-          onClick={(e) => { e.stopPropagation(); onToggleStar(question.id); }}
-          className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            question.is_starred
-              ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
-          <Star size={16} fill={question.is_starred ? 'currentColor' : 'none'} />
-          <span className="text-sm font-medium">
-            {question.is_starred ? 'Starred' : 'Star'}
-          </span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleStar(question.id); }}
+            className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+              question.is_starred
+                ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <Star size={16} fill={question.is_starred ? 'currentColor' : 'none'} />
+            <span className="text-sm font-medium">
+              {question.is_starred ? 'Starred' : 'Star'}
+            </span>
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm('Are you sure you want to delete this question?')) {
+                onDelete(question.id);
+              }
+            }}
+            className="flex items-center gap-1 px-3 py-2 rounded-lg transition-colors bg-red-100 text-red-700 hover:bg-red-200"
+          >
+            <span className="text-sm font-medium">Delete</span>
+          </button>
+        </div>
 
         <div
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${
