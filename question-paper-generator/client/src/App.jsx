@@ -6,7 +6,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
 import Onboarding from './pages/Onboarding';
 import LoadingSpinner from './components/LoadingSpinner';
-import api from './services/api';
+import api, { setAuthToken } from './services/api';
 
 // Profile Context to store user role and category
 const ProfileContext = createContext(null);
@@ -18,13 +18,23 @@ export const useProfile = () => {
 
 function ProfileProvider({ children }) {
   const { user, isLoaded } = useUser();
-  const { getToken } = useAuth(); // Get the token here
+  const { getToken } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoaded) return;
     
+    const setToken = async () => {
+      if (user) {
+        const token = await getToken();
+        setAuthToken(token);
+      } else {
+        setAuthToken(null);
+      }
+    };
+    setToken();
+
     if (!user) {
       setProfile(null);
       setLoading(false);
@@ -34,13 +44,7 @@ function ProfileProvider({ children }) {
     // Fetch user profile from backend
     const fetchProfile = async () => {
       try {
-        const token = await getToken(); // Get the token
-        const response = await api.get('/profile/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`, // Set the token
-            'X-Clerk-User-Id': user?.id || ''
-          }
-        });
+        const response = await api.get('/profile/me');
         setProfile(response.data);
       } catch (error) {
         // Profile doesn't exist yet - user needs onboarding

@@ -47,12 +47,9 @@ function Onboarding() {
 
     try {
       const response = await api.post('/profile', {
+        clerk_user_id: user?.id,
         role,
         category: role === 'student' ? category : null,
-      }, {
-        headers: {
-          'X-Clerk-User-Id': user?.id || ''
-        }
       });
 
       // Update profile context
@@ -61,11 +58,17 @@ function Onboarding() {
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
-      if (err.response?.data?.detail && Array.isArray(err.response.data.detail)) {
-        const errorDetails = err.response.data.detail.map(d => `${d.loc[1]}: ${d.msg}`).join(', ');
-        setError(`Validation error: ${errorDetails}`);
+      if (err.response?.data?.detail) {
+        if (Array.isArray(err.response.data.detail)) {
+          const errorDetails = err.response.data.detail.map(d => `${d.loc[1]}: ${d.msg}`).join(', ');
+          setError(`Validation error: ${errorDetails}`);
+        } else if (typeof err.response.data.detail === 'object') {
+          setError(JSON.stringify(err.response.data.detail));
+        } else {
+          setError(err.response.data.detail);
+        }
       } else {
-        setError(err.response?.data?.detail || 'Failed to save profile. Please try again.');
+        setError('Failed to save profile. Please try again.');
       }
       setLoading(false);
     }

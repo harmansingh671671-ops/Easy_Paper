@@ -99,4 +99,3 @@ async def update_current_user(
         raise HTTPException(status_code=400, detail="Failed to update user")
     updated_user.pop("password_hash", None)
     return User(**updated_user)
-

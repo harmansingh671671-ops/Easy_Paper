@@ -1,25 +1,15 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr
 from typing import Optional
-from enum import Enum
-from datetime import datetime
 from uuid import UUID
-
-class UserRole(str, Enum):
-    TEACHER = "teacher"
-    STUDENT = "student"
-
-class UserCategory(str, Enum):
-    COLLEGE = "college"
-    SCHOOL = "school"
-    COMPETITION = "competition"
+from datetime import datetime
 
 class UserBase(BaseModel):
     email: EmailStr
-    role: UserRole
-    category: UserCategory
+    role: str
+    category: Optional[str] = None
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=8)
+    password: str
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -34,18 +24,10 @@ class User(UserBase):
         from_attributes = True
 
 class UserUpdate(BaseModel):
-    role: Optional[UserRole] = None
-    category: Optional[UserCategory] = None
+    email: Optional[EmailStr] = None
+    role: Optional[str] = None
+    category: Optional[str] = None
 
 class TokenResponse(BaseModel):
     access_token: str
-    token_type: str = "bearer"
-    user: User
-
-
-
-
-
-
-
-
+    token_type: str

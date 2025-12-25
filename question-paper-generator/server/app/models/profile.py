@@ -9,6 +9,7 @@ class ProfileBase(BaseModel):
     category: Optional[str] = None  # 'college', 'school', 'competition' or None
 
 class ProfileCreate(BaseModel):
+    clerk_user_id: Optional[str] = None
     role: str  # 'teacher' or 'student'
     category: Optional[str] = None  # 'college', 'school', 'competition' or None
 
