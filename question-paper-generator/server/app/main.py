@@ -7,13 +7,19 @@ app = FastAPI(title="Question Paper Generator API")
 
 # Configure CORS origins from env var `ALLOW_ORIGINS` (comma-separated).
 # If set to '*', allow all origins (useful for quick local testing).
-allow_origins_env = os.getenv('ALLOW_ORIGINS', 'http://localhost:5173')
+allow_origins_env = os.getenv('ALLOW_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
 if allow_origins_env.strip() == '*':
     allow_origins = ["*"]
-    allow_credentials = False
 else:
     allow_origins = [o.strip() for o in allow_origins_env.split(',') if o.strip()]
-    allow_credentials = True
+
+# Add common local development origins to be safe
+if "http://localhost:5173" not in allow_origins:
+    allow_origins.append("http://localhost:5173")
+if "http://127.0.0.1:5173" not in allow_origins:
+    allow_origins.append("http://127.0.0.1:5173")
+
+allow_credentials = True
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,3 +37,5 @@ app.include_router(api_router, prefix="/api/v1")
 @app.get("/")
 def root():
     return {"status": "ok", "service": "question-paper-generator"}
+
+

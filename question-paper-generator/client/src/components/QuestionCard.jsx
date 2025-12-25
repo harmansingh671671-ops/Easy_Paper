@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { Star, Plus, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { MathText } from '../utils/mathRenderer';
 import { usePaper } from '../contexts/PaperContext';
+import { useProfile } from '../App';
 
 const QuestionCard = ({ question, onToggleStar, onDelete }) => {
-  const { addToPaper, isInPaper } = usePaper();
+  const { addToPaper, isInPaper, removeFromPaper } = usePaper();
+  const { profile } = useProfile();
   const [showSolution, setShowSolution] = useState(false);
   const [isAnswerVisible, setIsAnswerVisible] = useState(false); // New state for answer visibility
   const inPaper = isInPaper(question.id);
+  const isTeacher = profile?.role === 'teacher';
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
@@ -33,19 +36,23 @@ const QuestionCard = ({ question, onToggleStar, onDelete }) => {
     if (e.target.closest('button') || e.target.closest('a')) {
       return;
     }
-    addToPaper(question);
+    // Only allow adding to paper if teacher
+    if (isTeacher) {
+      if (inPaper) removeFromPaper(question.id);
+      else addToPaper(question);
+    }
   };
 
   console.log("Raw question text:", question.question_text);
 
   return (
-    <div 
-      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 cursor-pointer"
+    <div
+      className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 ${isTeacher ? 'cursor-pointer' : ''}`}
       onClick={handleCardClick}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
-        
+
         <div className="flex gap-2 flex-wrap">
           <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-semibold">
             {question.subject}
@@ -82,7 +89,7 @@ const QuestionCard = ({ question, onToggleStar, onDelete }) => {
             const optionKey = `option_${opt}`;
             const optionValue = question[optionKey];
             if (!optionValue) return null;
-            
+
             return (
               <div
                 key={opt}
@@ -112,8 +119,8 @@ const QuestionCard = ({ question, onToggleStar, onDelete }) => {
       )}
 
       {question.question_type === 'FILL_BLANK' && (
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200 text-center text-gray-500 italic">
-          Answer space for fill in the blank
+        <div className="mb-4">
+          {/* Answer space removed as per user request */}
         </div>
       )}
 
@@ -153,49 +160,43 @@ const QuestionCard = ({ question, onToggleStar, onDelete }) => {
         <div className="flex items-center gap-2">
           <button
             onClick={(e) => { e.stopPropagation(); onToggleStar(question.id); }}
-            className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-              question.is_starred
-                ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+            className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-colors ${question.is_starred
+              ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
           >
             <Star size={16} fill={question.is_starred ? 'currentColor' : 'none'} />
             <span className="text-sm font-medium">
               {question.is_starred ? 'Starred' : 'Star'}
             </span>
           </button>
+        </div>
+
+        {isTeacher && (
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (window.confirm('Are you sure you want to delete this question?')) {
-                onDelete(question.id);
+              if (inPaper) {
+                removeFromPaper(question.id);
+              } else {
+                addToPaper(question);
               }
             }}
-            className="flex items-center gap-1 px-3 py-2 rounded-lg transition-colors bg-red-100 text-red-700 hover:bg-red-200"
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${inPaper
+              ? 'bg-red-50 text-red-600 hover:bg-red-100'
+              : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+              }`}
           >
-            <span className="text-sm font-medium">Delete</span>
+            {inPaper ? (
+              <span className="text-sm">Remove</span>
+            ) : (
+              <>
+                <Plus size={18} />
+                <span>Add to Paper</span>
+              </>
+            )}
           </button>
-        </div>
-
-        <div
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${
-            inPaper
-              ? 'bg-green-100 text-green-700'
-              : 'bg-indigo-100 text-indigo-700'
-          }`}
-        >
-          {inPaper ? (
-            <>
-              <Check size={18} />
-              <span>In Paper</span>
-            </>
-          ) : (
-            <>
-              <Plus size={18} />
-              <span>Add to Paper</span>
-            </>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

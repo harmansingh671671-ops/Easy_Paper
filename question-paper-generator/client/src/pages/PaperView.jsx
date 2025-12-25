@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
-import { Trash2, GripVertical, Download, ArrowLeft, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Trash2, GripVertical, Download, ArrowLeft, Loader2, Save } from 'lucide-react';
 import { usePaper } from '../contexts/PaperContext';
 import { renderMath } from '../utils/mathRenderer';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import questionService from '../services/questionService';
+import teacherService from '../services/teacherService';
+import { useProfile } from '../App';
 
 const PaperView = ({ onBack }) => {
   const { paperQuestions, removeFromPaper, clearPaper, getTotalMarks, reorderQuestions, updateQuestionMarks } = usePaper();
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
- 
+  const { profile } = useProfile();
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Paper Metadata State
+  const [paperDetails, setPaperDetails] = useState({
+    title: '',
+    duration: '', // Changed default to empty as requested
+    instructions: 'All questions are compulsory.' // Changed default as requested
+  });
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -18,6 +28,7 @@ const PaperView = ({ onBack }) => {
       },
     })
   );
+
   const handleDragEnd = (event) => {
     const { active, over } = event;
     if (active.id !== over.id) {
@@ -27,27 +38,85 @@ const PaperView = ({ onBack }) => {
     }
   };
 
-  const handleGeneratePdf = async () => {
-    if (paperQuestions.length === 0) return;
-    setIsGeneratingPdf(true);
+  const handleSaveAndGenerate = async () => {
+    if (!paperDetails.title) {
+      alert("Please enter a paper title");
+      return;
+    }
+
+    setIsSaving(true);
     try {
+      // 1. Create Paper in DB (if Teacher)
+      // We check if teacherService is available or based on profile, but sticking to existing pattern
+      if (profile?.role === 'teacher') {
+        const paperData = {
+          title: paperDetails.title,
+          category: profile.category,
+          questions: paperQuestions.map(q => ({ id: q.id, marks: q.marks })),
+          total_marks: getTotalMarks(),
+          duration_minutes: parseInt(paperDetails.duration || 0),
+          instructions: paperDetails.instructions
+        };
+
+        await teacherService.createPaper(
+          paperData.title,
+          paperData.category,
+          paperData.total_marks,
+          paperData.duration_minutes,
+          paperData.instructions,
+          paperData.questions
+        );
+      }
+
+      // 2. Generate PDF
       const questionIds = paperQuestions.map(q => q.id);
-      const pdfBlob = await questionService.generatePdf(questionIds, "My Question Paper");
-      
-      // Create a URL for the blob
+      // We also want to pass metadata to PDF generator if backend supports it, 
+      // otherwise it just uses IDs.
+      // Assuming generatePdf can take an object or we use the existing simple one.
+      // Checking questionService.generatePdf signature... it takes (questionIds, title).
+      // Let's update it to pass full metadata if possible, or just title.
+      // Based on previous code in TeacherPaperCreator: 
+      // await questionService.generatePdf({ title, question_ids });
+
+      let pdfBlob;
+      // Heuristic: check if backend supports object payload or just IDs.
+      // Existing usage in PaperView was `generatePdf(questionIds, "My Question Paper")`
+      // TeacherPaperCreator used `generatePdf({ title, question_ids })`
+      // Let's try the object format which seems more robust for metadata
+      try {
+        pdfBlob = await questionService.generatePdf({
+          title: paperDetails.title,
+          question_ids: questionIds,
+          duration: parseInt(paperDetails.duration || 0), // Safe parse
+          instructions: paperDetails.instructions,
+          total_marks: getTotalMarks()
+        });
+      } catch (e) {
+        // Fallback to simple signature if object one fails immediately (though likely same endpoint)
+        pdfBlob = await questionService.generatePdf(questionIds, paperDetails.title);
+      }
+
+      // 3. Download
       const url = window.URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'question-paper.pdf';
+      a.download = `${paperDetails.title.replace(/\s+/g, '_')}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
 
+      alert(profile?.role === 'teacher' ? 'Paper saved and downloaded!' : 'Paper downloaded!');
+
+      // Optional: Clear paper or go back?
+      // clearPaper(); 
+      // onBack();
+
     } catch (error) {
-      alert('Failed to generate PDF. Please try again.');
+      console.error(error);
+      alert('Failed to process paper. Please try again.');
     } finally {
-      setIsGeneratingPdf(false);
+      setIsSaving(false);
     }
   };
 
@@ -64,11 +133,9 @@ const PaperView = ({ onBack }) => {
       if (currentMarks !== question.marks && currentMarks > 0) {
         updateQuestionMarks(question.id, currentMarks);
       } else if (currentMarks <= 0) {
-        // Reset to original marks if value is invalid
         setCurrentMarks(question.marks);
       }
     };
-
 
     return (
       <div ref={setNodeRef} style={style} className="bg-white rounded-lg shadow p-6">
@@ -94,7 +161,7 @@ const PaperView = ({ onBack }) => {
                 className="w-16 px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
                 min="1"
               />
-               <span className="text-xs text-gray-500">marks</span>
+              <span className="text-xs text-gray-500">marks</span>
             </div>
 
             <div className="text-gray-800">
@@ -139,7 +206,7 @@ const PaperView = ({ onBack }) => {
             <ArrowLeft size={20} />
             <span className="font-medium">Back to Library</span>
           </button>
-          
+
           <div className="bg-white rounded-lg shadow-lg p-12 text-center">
             <div className="text-6xl mb-4">📄</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">No Questions in Paper</h2>
@@ -175,7 +242,7 @@ const PaperView = ({ onBack }) => {
             <span className="font-medium">Back to Library</span>
           </button>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Question Paper</h1>
               <p className="text-gray-600 mt-1">
@@ -188,20 +255,54 @@ const PaperView = ({ onBack }) => {
                 className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
               >
                 <Trash2 size={18} />
-                Clear All
+                Clear
               </button>
-              <button 
-                onClick={handleGeneratePdf}
-                disabled={isGeneratingPdf}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400"
+              <button
+                onClick={handleSaveAndGenerate}
+                disabled={isSaving}
+                className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 shadow-sm"
               >
-                {isGeneratingPdf ? (
+                {isSaving ? (
                   <Loader2 className="animate-spin" size={18} />
                 ) : (
-                  <Download size={18} />
+                  <Save size={18} />
                 )}
-                {isGeneratingPdf ? 'Generating...' : 'Generate PDF'}
+                {isSaving ? 'Processing...' : (profile?.role === 'teacher' ? 'Save & Download' : 'Download PDF')}
               </button>
+            </div>
+          </div>
+
+          {/* Paper Metadata Inputs */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-6">
+            <div className="col-span-1 md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Paper Title</label>
+              <input
+                type="text"
+                value={paperDetails.title}
+                onChange={(e) => setPaperDetails({ ...paperDetails, title: e.target.value })}
+                placeholder="e.g. Mathematics Final Exam"
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
+              <input
+                type="number"
+                value={paperDetails.duration}
+                onChange={(e) => setPaperDetails({ ...paperDetails, duration: e.target.value })}
+                placeholder="e.g. 180"
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="col-span-1 md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Instructions</label>
+              <textarea
+                value={paperDetails.instructions}
+                onChange={(e) => setPaperDetails({ ...paperDetails, instructions: e.target.value })}
+                placeholder="Enter instructions for students..."
+                rows="2"
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              />
             </div>
           </div>
         </div>
@@ -220,11 +321,11 @@ const PaperView = ({ onBack }) => {
         </div>
 
         {/* Questions List with Drag & Drop */}
-        <DndContext 
+        <DndContext
           sensors={sensors}
-          collisionDetection={closestCenter} 
+          collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
-      >
+        >
           <SortableContext items={paperQuestions.map(q => q.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-4">
               {paperQuestions.map((question, index) => (

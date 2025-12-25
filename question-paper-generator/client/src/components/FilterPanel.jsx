@@ -25,7 +25,7 @@ const FilterPanel = ({ filters, onFilterChange, onClearFilters, openCreateModal 
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
           >
             <Plus size={18} />
-            <span className="font-semibold">Create Question</span>
+            <span className="font-semibold">Add Question</span>
           </button>
         </div>
       </div>

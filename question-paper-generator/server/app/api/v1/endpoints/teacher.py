@@ -19,7 +19,7 @@ def get_services(supabase: Client = Depends(get_supabase)):
 async def get_internal_user_id(x_clerk_user_id: str, profile_service: ProfileService) -> str:
     profile = await profile_service.get_profile_by_clerk_id(x_clerk_user_id)
     if not profile:
-        raise HTTPException(status_code=404, detail="Profile not found. Please complete onboarding.")
+        raise HTTPException(status_code=400, detail="Profile not found. Please complete onboarding.")
     if profile.get("role") != "teacher":
         raise HTTPException(status_code=403, detail="Access denied. Teachers only.")
     return profile["id"]
@@ -31,6 +31,11 @@ class PaperCreate(BaseModel):
     duration_minutes: int
     instructions: str
     questions: List[Dict[str, Any]]
+
+@router.get("/ping")
+async def ping():
+    print("PING PONG")
+    return {"status": "ok", "module": "teacher"}
 
 @router.post("/papers")
 async def create_paper(
