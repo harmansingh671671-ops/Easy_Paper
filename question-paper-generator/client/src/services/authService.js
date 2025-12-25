@@ -1,97 +1,45 @@
 import api from './api';
 
+const TOKEN_KEY = 'auth_token';
+
 const authService = {
-  // Register new user
-  register: async (userData) => {
-    try {
-      const response = await api.post('/auth/register', userData);
-      // Store token
-      if (response.data.access_token) {
-        localStorage.setItem('access_token', response.data.access_token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-      }
-      return response.data;
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
+  async login(email, password) {
+    const response = await api.post('/auth/login', { email, password });
+    if (response.data.access_token) {
+      localStorage.setItem(TOKEN_KEY, response.data.access_token);
     }
+    return response.data;
   },
 
-  // Login
-  login: async (email, password) => {
-    try {
-      const response = await api.post('/auth/login', { email, password });
-      // Store token
-      if (response.data.access_token) {
-        localStorage.setItem('access_token', response.data.access_token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-      }
-      return response.data;
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+  async register(userData) {
+    const response = await api.post('/auth/register', userData);
+    if (response.data.access_token) {
+      localStorage.setItem(TOKEN_KEY, response.data.access_token);
     }
+    return response.data;
   },
 
-  // Logout
-  logout: () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
+  logout() {
+    localStorage.removeItem(TOKEN_KEY);
   },
 
-  // Get current user
-  getCurrentUser: async () => {
-    try {
-      const token = localStorage.getItem('access_token');
-      if (!token) return null;
-      
-      const response = await api.get('/auth/me');
-      localStorage.setItem('user', JSON.stringify(response.data));
-      return response.data;
-    } catch (error) {
-      console.error('Get current user error:', error);
-      // Clear invalid token
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user');
-      return null;
-    }
+  getStoredUser() {
+    return localStorage.getItem(TOKEN_KEY);
   },
 
-  // Update user profile
-  updateProfile: async (userData) => {
-    try {
-      const response = await api.put('/auth/me', userData);
-      localStorage.setItem('user', JSON.stringify(response.data));
-      return response.data;
-    } catch (error) {
-      console.error('Update profile error:', error);
-      throw error;
-    }
+  isAuthenticated() {
+    return !!this.getStoredUser();
   },
 
-  // Check if user is authenticated
-  isAuthenticated: () => {
-    return !!localStorage.getItem('access_token');
+  async getCurrentUser() {
+    const response = await api.get('/auth/me');
+    return response.data;
   },
 
-  // Get stored user
-  getStoredUser: () => {
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
-  },
-
-  // Get token
-  getToken: () => {
-    return localStorage.getItem('access_token');
+  async updateProfile(userData) {
+    const response = await api.put('/auth/me', userData);
+    return response.data;
   }
 };
 
 export default authService;
-
-
-
-
-
-
-
-

@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { useAuth } from '@clerk/clerk-react';
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -9,12 +8,41 @@ const api = axios.create({
   },
 });
 
-// Function to get Clerk token (will be called from components)
-
 // Add request interceptor for authentication
 api.interceptors.request.use(
   async (config) => {
     console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    
+    try {
+      const clerk = window.Clerk;
+      if (clerk) {
+        // Add Clerk User ID header
+        if (clerk.user && clerk.user.id) {
+          config.headers['X-Clerk-User-Id'] = clerk.user.id;
+          console.log('X-Clerk-User-Id header injected.');
+        } else {
+          console.log('Clerk user not available.');
+        }
+
+        // Add JWT token for authorization
+        if (clerk.session) {
+          const token = await clerk.session.getToken();
+          if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+            console.log('Authorization header (JWT) injected.');
+          } else {
+            console.log('No JWT token found in session.');
+          }
+        } else {
+          console.log('Clerk session not available.');
+        }
+      } else {
+        console.log('Clerk not available on window object.');
+      }
+    } catch (error) {
+      console.error('Error setting auth headers:', error);
+    }
+    
     return config;
   },
   (error) => {
