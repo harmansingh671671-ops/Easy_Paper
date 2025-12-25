@@ -9,11 +9,19 @@ const api = axios.create({
   },
 });
 
-// Function to get Clerk token (will be called from components)
-
 // Add request interceptor for authentication
 api.interceptors.request.use(
   async (config) => {
+    // We can't use the `useAuth` hook here, so we access the session from the window
+    // This is a common pattern for setting auth headers in an API service file
+    const clerk = window.Clerk;
+    if (clerk && clerk.session) {
+      const token = await clerk.session.getToken();
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+    
     console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },

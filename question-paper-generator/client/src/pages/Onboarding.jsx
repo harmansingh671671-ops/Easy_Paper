@@ -47,12 +47,9 @@ function Onboarding() {
 
     try {
       const response = await api.post('/profile', {
+        clerk_user_id: user?.id,
         role,
         category: role === 'student' ? category : null,
-      }, {
-        headers: {
-          'X-Clerk-User-Id': user?.id || ''
-        }
       });
 
       // Update profile context
