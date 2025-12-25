@@ -17,17 +17,14 @@ async def create_or_update_profile(
     service: ProfileService = Depends(get_profile_service)
 ):
     """Create or update user profile"""
-    # In production, verify Clerk JWT and extract user_id from token
-    # For now, accept it from header (sent from frontend)
-    if not x_clerk_user_id:
-        raise HTTPException(status_code=400, detail="Missing user ID")
-    
-    # Override clerk_user_id from header (more secure)
-    # profile_data.clerk_user_id = x_clerk_user_id
-    
+    clerk_user_id = x_clerk_user_id or profile_data.clerk_user_id
+
+    if not clerk_user_id:
+        raise HTTPException(status_code=400, detail="Clerk user ID is required")
+
     try:
         profile = await service.create_or_update_profile(
-            clerk_user_id=x_clerk_user_id,
+            clerk_user_id=clerk_user_id,
             profile_data=profile_data
         )
         return profile
