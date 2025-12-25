@@ -34,8 +34,13 @@ function ProfileProvider({ children }) {
     // Fetch user profile from backend
     const fetchProfile = async () => {
       try {
-        // The interceptor in api.js will automatically add the token
-        const response = await api.get('/profile/me');
+        const token = await getToken(); // Get the token
+        const response = await api.get('/profile/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`, // Set the token
+            'X-Clerk-User-Id': user?.id || ''
+          }
+        });
         setProfile(response.data);
       } catch (error) {
         // Profile doesn't exist yet - user needs onboarding
