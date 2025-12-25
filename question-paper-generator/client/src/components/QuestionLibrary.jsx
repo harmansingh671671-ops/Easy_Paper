@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useProfile } from '../App';
 import questionService from '../services/questionService';
 import FilterPanel from './FilterPanel';
@@ -80,7 +80,7 @@ function QuestionLibrary({ showCreateButton = true }) {
     });
   };
 
-  const handleToggleStar = async (questionId) => {
+  const handleToggleStar = useCallback(async (questionId) => {
     try {
       const updatedQuestion = await questionService.toggleStar(questionId);
       
@@ -94,14 +94,14 @@ function QuestionLibrary({ showCreateButton = true }) {
       console.error('Failed to toggle star:', err);
       alert('Failed to star question');
     }
-  };
+  }, []);
 
   const handleQuestionCreated = (newQuestion) => {
     setTotalQuestions(prev => prev + 1);
     setQuestions(prev => [newQuestion, ...prev]);
   };
 
-  const handleDeleteQuestion = async (questionId) => {
+  const handleDeleteQuestion = useCallback(async (questionId) => {
     try {
       await questionService.deleteQuestion(questionId);
       
@@ -115,7 +115,7 @@ function QuestionLibrary({ showCreateButton = true }) {
       console.error('Failed to delete question:', err);
       alert('Failed to delete question. Please try again.');
     }
-  };
+  }, []);
 
   if (currentView === 'paper') {
     return <PaperView onBack={() => setCurrentView('library')} />;
