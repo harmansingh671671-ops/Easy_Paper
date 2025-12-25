@@ -6,7 +6,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
 import Onboarding from './pages/Onboarding';
 import LoadingSpinner from './components/LoadingSpinner';
-import api, { setAuthToken } from './services/api';
+import api from './services/api';
 
 // Profile Context to store user role and category
 const ProfileContext = createContext(null);
@@ -24,16 +24,6 @@ function ProfileProvider({ children }) {
 
   useEffect(() => {
     if (!isLoaded) return;
-    
-    const setToken = async () => {
-      if (user) {
-        const token = await getToken();
-        setAuthToken(token);
-      } else {
-        setAuthToken(null);
-      }
-    };
-    setToken();
 
     if (!user) {
       setProfile(null);

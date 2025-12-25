@@ -1,6 +1,8 @@
 import os
+import time
 from google import genai
 from google.genai import types
+from google.api_core.exceptions import ResourceExhausted
 import PyPDF2
 import io
 import json
@@ -12,10 +14,27 @@ class AIService:
         if not api_key:
             raise ValueError("GEMINI_API_KEY not found in environment variables")
         
-        # Initialize the new Client
+        # Initialize the Client for the older SDK version
         self.client = genai.Client(api_key=api_key)
-        self.model_name = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
+        self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash") # Use a standard model
     
+    def _generate_content_with_retry(self, model_name, contents, config, retries=5):
+        delay = 2  # Start with 2 seconds
+        for i in range(retries):
+            try:
+                # Use the client.models.generate_content method
+                response = self.client.models.generate_content(
+                    model=model_name,
+                    contents=contents,
+                    config=config
+                )
+                return response
+            except ResourceExhausted:
+                print(f"Quota exceeded. Retrying in {delay} seconds...")
+                time.sleep(delay)
+                delay *= 2  # Double the wait time for the next retry
+        raise Exception("Max retries exceeded")
+
     def extract_text_from_pdf(self, pdf_bytes: bytes) -> str:
         """Extract text content from PDF bytes (hidden from user)"""
         try:
@@ -29,7 +48,7 @@ class AIService:
             raise ValueError(f"Failed to extract text from PDF: {str(e)}")
     
     def _generate_text(self, prompt: str, system_instruction: str = None) -> str:
-        """Helper method to generate text using Gemini (Updated for new SDK)"""
+        """Helper method to generate text using Gemini (Compatible with v0.8.3)"""
         try:
             # Configure generation settings
             config = types.GenerateContentConfig(
@@ -38,9 +57,9 @@ class AIService:
                 system_instruction=system_instruction
             )
             
-            # Call the model using the new client structure
-            response = self.client.models.generate_content(
-                model=self.model_name,
+            # Call the model using the older client structure with retry logic
+            response = self._generate_content_with_retry(
+                model_name=self.model_name,
                 contents=prompt,
                 config=config
             )

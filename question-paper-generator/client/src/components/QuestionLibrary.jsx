@@ -7,7 +7,7 @@ import CreateQuestionModal from './CreateQuestionModal';
 import { usePaper } from '../contexts/PaperContext';
 import PaperView from '../pages/PaperView';
 
-function QuestionLibrary({ showCreateButton = true }) {
+function QuestionLibrary({ showCreateButton = true, enableSelection = false, selectedIds = [], onToggleSelection }) {
   const { profile: user } = useProfile();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,11 +22,11 @@ function QuestionLibrary({ showCreateButton = true }) {
     search: '',
     page: 1,
     page_size: 20,
-    category: user?.category || '', // Auto-filter by user category
+    category: user?.category || '',
   });
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   const { paperQuestions, getTotalMarks } = usePaper();
 
   // Fetch questions when filters change
@@ -38,15 +38,14 @@ function QuestionLibrary({ showCreateButton = true }) {
     try {
       setLoading(true);
       setError(null);
-      
-      // Always include user's category filter
+
       const cleanFilters = {
         ...Object.fromEntries(
           Object.entries(filters).filter(([_, value]) => value !== '')
         ),
-        category: user?.category || filters.category, // Ensure category is always set
+        category: user?.category || filters.category,
       };
-      
+
       const data = await questionService.getAllQuestions(cleanFilters);
       setQuestions(data.questions);
       setTotalQuestions(data.total);
@@ -62,7 +61,7 @@ function QuestionLibrary({ showCreateButton = true }) {
     setFilters(prev => ({
       ...prev,
       [filterName]: value,
-      page: 1, // Reset to page 1 when filter changes
+      page: 1,
     }));
   };
 
@@ -76,15 +75,13 @@ function QuestionLibrary({ showCreateButton = true }) {
       search: '',
       page: 1,
       page_size: 20,
-      category: user?.category || '', // Keep user category
+      category: user?.category || '',
     });
   };
 
   const handleToggleStar = async (questionId) => {
     try {
       const updatedQuestion = await questionService.toggleStar(questionId);
-      
-      // Update the question in the list
       setQuestions(prevQuestions =>
         prevQuestions.map(q =>
           q.id === questionId ? updatedQuestion : q
@@ -104,13 +101,10 @@ function QuestionLibrary({ showCreateButton = true }) {
   const handleDeleteQuestion = async (questionId) => {
     try {
       await questionService.deleteQuestion(questionId);
-      
-      // Update the question list and total count
       setQuestions(prevQuestions =>
         prevQuestions.filter(q => q.id !== questionId)
       );
       setTotalQuestions(prev => prev - 1);
-
     } catch (err) {
       console.error('Failed to delete question:', err);
       alert('Failed to delete question. Please try again.');
@@ -123,8 +117,8 @@ function QuestionLibrary({ showCreateButton = true }) {
 
   return (
     <div>
-      {/* Paper Summary Bar */}
-      {paperQuestions.length > 0 && (
+      {/* Paper Summary Bar - Only show if selection is NOT enabled (default view) */}
+      {!enableSelection && paperQuestions.length > 0 && (
         <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <div>
@@ -140,7 +134,7 @@ function QuestionLibrary({ showCreateButton = true }) {
               </p>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setCurrentView('paper')}
             className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold"
           >
@@ -194,12 +188,23 @@ function QuestionLibrary({ showCreateButton = true }) {
           ) : (
             <div className="space-y-4">
               {questions.map((question) => (
-                <QuestionCard
-                  key={question.id}
-                  question={question}
-                  onToggleStar={handleToggleStar}
-                  onDelete={handleDeleteQuestion}
-                />
+                <div key={question.id} className="relative">
+                  {enableSelection && (
+                    <div className="absolute top-4 right-4 z-10">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(question.id)}
+                        onChange={() => onToggleSelection(question)}
+                        className="w-6 h-6 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+                      />
+                    </div>
+                  )}
+                  <QuestionCard
+                    question={question}
+                    onToggleStar={handleToggleStar}
+                    onDelete={handleDeleteQuestion}
+                  />
+                </div>
               ))}
             </div>
           )}

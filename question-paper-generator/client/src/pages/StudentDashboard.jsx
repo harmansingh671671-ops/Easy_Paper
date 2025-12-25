@@ -1,43 +1,37 @@
 import { useState } from 'react';
 import { useUser, SignOutButton } from '@clerk/clerk-react';
 import { useProfile } from '../App';
-import { 
-  BookOpen, 
-  FileText, 
-  Brain, 
-  HelpCircle, 
+import {
+  BookOpen,
+  Brain,
   LogOut,
-  Upload,
-  BookMarked,
-  Zap
+  PenTool,
+  GraduationCap
 } from 'lucide-react';
 import QuestionLibrary from '../components/QuestionLibrary';
-import PdfUpload from '../components/PdfUpload';
-import NotesViewer from '../components/NotesViewer';
-import FlashcardViewer from '../components/FlashcardViewer';
-import QuizViewer from '../components/QuizViewer';
-import MindMapViewer from '../components/MindMapViewer';
+import RevisionTab from '../components/RevisionTab';
 
 function StudentDashboard() {
   const { user } = useUser();
   const { profile } = useProfile();
-  const [activeTab, setActiveTab] = useState('library');
-  const [processedData, setProcessedData] = useState(null);
+  const [activeTab, setActiveTab] = useState('practice'); // 'practice', 'revision'
 
   const categoryLabels = {
     college: 'College',
     school: 'School',
-    competition: 'Competition Exams'
+    competition: 'Competition'
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-md sticky top-0 z-10">
+      <header className="bg-white shadow-md sticky top-0 z-10 flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <BookOpen className="text-indigo-600" size={32} />
+              <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+                <GraduationCap size={24} />
+              </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Easy Paper</h1>
                 <p className="text-sm text-gray-600">
@@ -45,172 +39,86 @@ function StudentDashboard() {
                 </p>
               </div>
             </div>
+
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">{user?.primaryEmailAddress?.emailAddress}</span>
+              {/* Center Tabs for cleaner look */}
+              <div className="hidden md:flex bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setActiveTab('practice')}
+                  className={`flex items-center gap-2 px-6 py-2 rounded-md font-medium transition-all ${activeTab === 'practice'
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                  <BookOpen size={18} />
+                  Practice Question
+                </button>
+                <button
+                  onClick={() => setActiveTab('revision')}
+                  className={`flex items-center gap-2 px-6 py-2 rounded-md font-medium transition-all ${activeTab === 'revision'
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                  <Brain size={18} />
+                  Revision & AI
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <span className="hidden sm:inline text-sm text-gray-600">{user?.primaryEmailAddress?.emailAddress}</span>
               <SignOutButton>
-                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                <button className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Logout">
                   <LogOut size={20} />
-                  <span>Logout</span>
                 </button>
               </SignOutButton>
             </div>
           </div>
+
+          {/* Mobile Tabs */}
+          <div className="md:hidden mt-4 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setActiveTab('practice')}
+              className={`flex items-center justify-center gap-2 p-3 rounded-lg font-medium border ${activeTab === 'practice'
+                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                  : 'bg-white border-gray-200 text-gray-600'
+                }`}
+            >
+              <BookOpen size={18} />
+              Practice
+            </button>
+            <button
+              onClick={() => setActiveTab('revision')}
+              className={`flex items-center justify-center gap-2 p-3 rounded-lg font-medium border ${activeTab === 'revision'
+                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                  : 'bg-white border-gray-200 text-gray-600'
+                }`}
+            >
+              <Brain size={18} />
+              Revision
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Navigation Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-lg shadow-sm p-1 mb-6">
-          <div className="flex space-x-1">
-            {[
-              { id: 'library', label: 'Question Library', icon: BookOpen },
-              { id: 'practice', label: 'Practice', icon: HelpCircle },
-              { id: 'notes', label: 'My Notes', icon: FileText },
-              { id: 'flashcards', label: 'Flashcards', icon: BookMarked },
-              { id: 'mindmaps', label: 'Mind Maps', icon: Brain },
-              { id: 'upload', label: 'Upload PDF', icon: Upload },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <Icon size={20} />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                </button>
-              );
-            })}
+      {/* Content Area */}
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+        {activeTab === 'practice' && (
+          <div className="bg-white rounded-lg shadow-sm p-6 h-[calc(100vh-140px)] overflow-hidden flex flex-col">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex-shrink-0">Question Bank Practice</h2>
+            <div className="flex-1 overflow-y-auto">
+              <QuestionLibrary showCreateButton={false} />
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Content Area */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          {activeTab === 'library' && (
-            <QuestionLibrary showCreateButton={false} />
-          )}
-
-          {activeTab === 'practice' && (
-            <div>
-              {processedData?.quiz ? (
-                <QuizViewer questions={processedData.quiz} />
-              ) : (
-                <div className="text-center py-12">
-                  <HelpCircle className="mx-auto text-gray-400 mb-4" size={48} />
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Practice Sessions</h2>
-                  <p className="text-gray-600 mb-6">
-                    Create practice sessions and track your progress.
-                  </p>
-                  <button
-                    onClick={() => setActiveTab('upload')}
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    Upload PDF to Generate Quiz
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'notes' && (
-            <div>
-              {processedData?.notes ? (
-                <NotesViewer notes={processedData.notes} title="My Notes" />
-              ) : (
-                <div className="text-center py-12">
-                  <FileText className="mx-auto text-gray-400 mb-4" size={48} />
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">My Notes</h2>
-                  <p className="text-gray-600 mb-6">
-                    AI-generated short notes from your uploaded PDFs.
-                  </p>
-                  <button
-                    onClick={() => setActiveTab('upload')}
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    Upload PDF to Generate Notes
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'flashcards' && (
-            <div>
-              {processedData?.flashcards ? (
-                <FlashcardViewer flashcards={processedData.flashcards} />
-              ) : (
-                <div className="text-center py-12">
-                  <BookMarked className="mx-auto text-gray-400 mb-4" size={48} />
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Flashcards</h2>
-                  <p className="text-gray-600 mb-6">
-                    Study with AI-generated flashcards from your notes.
-                  </p>
-                  <button
-                    onClick={() => setActiveTab('upload')}
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    Upload PDF to Generate Flashcards
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'mindmaps' && (
-            <div>
-              {processedData?.mindmap ? (
-                <MindMapViewer mindmap={processedData.mindmap} />
-              ) : (
-                <div className="text-center py-12">
-                  <Brain className="mx-auto text-gray-400 mb-4" size={48} />
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Mind Maps</h2>
-                  <p className="text-gray-600 mb-6">
-                    Visualize topics with AI-generated mind maps.
-                  </p>
-                  <button
-                    onClick={() => setActiveTab('upload')}
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    Upload PDF to Generate Mind Map
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'upload' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Upload PDF</h2>
-              <p className="text-gray-600 mb-6">
-                Upload your PDF notes to generate short notes, flashcards, quizzes, and mind maps.
-              </p>
-              <PdfUpload
-                onProcessed={(data) => {
-                  setProcessedData(data);
-                  // Auto-switch to notes tab if notes are generated
-                  if (data.notes) {
-                    setActiveTab('notes');
-                  }
-                }}
-              />
-              {processedData?.quiz && (
-                <div className="mt-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Generated Quiz</h3>
-                  <QuizViewer questions={processedData.quiz} />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+        {activeTab === 'revision' && (
+          <RevisionTab />
+        )}
+      </main>
     </div>
   );
 }
 
 export default StudentDashboard;
-
