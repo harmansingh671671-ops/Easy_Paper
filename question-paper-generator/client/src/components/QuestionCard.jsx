@@ -1,9 +1,9 @@
-import React, { useState, memo } from 'react';
+import React, { useState } from 'react';
 import { Star, Plus, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { MathText } from '../utils/mathRenderer';
 import { usePaper } from '../contexts/PaperContext';
 
-const QuestionCard = memo(({ question, onToggleStar, onDelete }) => {
+const QuestionCard = ({ question, onToggleStar, onDelete }) => {
   const { addToPaper, isInPaper } = usePaper();
   const [showSolution, setShowSolution] = useState(false);
   const [isAnswerVisible, setIsAnswerVisible] = useState(false); // New state for answer visibility
@@ -199,5 +199,6 @@ const QuestionCard = memo(({ question, onToggleStar, onDelete }) => {
       </div>
     </div>
   );
-});
+};
+
 export default QuestionCard;
