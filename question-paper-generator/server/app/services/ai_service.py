@@ -1,7 +1,6 @@
 import os
 import time
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 from google.api_core.exceptions import ResourceExhausted
 import PyPDF2
 import io
@@ -14,19 +13,23 @@ class AIService:
         if not api_key:
             raise ValueError("GEMINI_API_KEY not found in environment variables")
         
-        # Initialize the Client for the older SDK version
-        self.client = genai.Client(api_key=api_key)
+        # Initialize the library
+        genai.configure(api_key=api_key)
         self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash") # Use a standard model
+        self.model = genai.GenerativeModel(self.model_name)
     
     def _generate_content_with_retry(self, model_name, contents, config, retries=5):
         delay = 2  # Start with 2 seconds
+        # Note: model_name argument is technically redundant if we use self.model, 
+        # but we keep the signature or just use self.model
+        generation_config = config
+        
         for i in range(retries):
             try:
-                # Use the client.models.generate_content method
-                response = self.client.models.generate_content(
-                    model=model_name,
-                    contents=contents,
-                    config=config
+                # Use the model.generate_content method
+                response = self.model.generate_content(
+                    contents,
+                    generation_config=generation_config
                 )
                 return response
             except ResourceExhausted:
@@ -51,16 +54,31 @@ class AIService:
         """Helper method to generate text using Gemini (Compatible with v0.8.3)"""
         try:
             # Configure generation settings
-            config = types.GenerateContentConfig(
+            # Using dictionary or direct object for config
+            config = genai.types.GenerationConfig(
                 temperature=0.7,
                 max_output_tokens=2000,
-                system_instruction=system_instruction
             )
             
+            # System instruction is usually passed to GenerativeModel init in some versions, 
+            # or as a separate argument. For 0.8.3, it can be passed to generate_content or model generic.
+            # However, standard GenerativeModel doesn't support system_instruction in config easily in all versions.
+            # But recent versions allow it in model construction.
+            # To keep it simple and safe: Prepend system instruction to prompt if needed, 
+            # OR use the modern system_instruction arg if available.
+            # Let's try to set it on logic or just update the prompt structure? 
+            # Gemini 1.5 supports system_instruction argument in GenerativeModel constructor.
+            # But we initialized it once. 
+            # Let's just prepend it to prompt for maximum compatibility for now for this fix.
+            
+            final_prompt = prompt
+            if system_instruction:
+                final_prompt = f"System Instruction: {system_instruction}\n\n{prompt}"
+
             # Call the model using the older client structure with retry logic
             response = self._generate_content_with_retry(
                 model_name=self.model_name,
-                contents=prompt,
+                contents=final_prompt,
                 config=config
             )
             

@@ -166,7 +166,13 @@ async def generate_pdf(
         raise HTTPException(status_code=400, detail="No valid questions provided")
     
     pdf_service = PDFService()
-    pdf_bytes = pdf_service.generate_pdf(questions_data, request.title)
+    pdf_bytes = pdf_service.generate_pdf(
+        questions_data, 
+        request.title,
+        duration=request.duration,
+        instructions=request.instructions,
+        total_marks_override=request.total_marks
+    )
     
     return StreamingResponse(
         io.BytesIO(pdf_bytes),

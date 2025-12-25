@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1/',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -12,7 +12,7 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
-    
+
     try {
       const clerk = window.Clerk;
       if (clerk) {
@@ -42,7 +42,7 @@ api.interceptors.request.use(
     } catch (error) {
       console.error('Error setting auth headers:', error);
     }
-    
+
     return config;
   },
   (error) => {

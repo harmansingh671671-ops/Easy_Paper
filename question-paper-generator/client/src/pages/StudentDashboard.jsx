@@ -46,8 +46,8 @@ function StudentDashboard() {
                 <button
                   onClick={() => setActiveTab('practice')}
                   className={`flex items-center gap-2 px-6 py-2 rounded-md font-medium transition-all ${activeTab === 'practice'
-                      ? 'bg-white text-indigo-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white text-indigo-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
                     }`}
                 >
                   <BookOpen size={18} />
@@ -56,8 +56,8 @@ function StudentDashboard() {
                 <button
                   onClick={() => setActiveTab('revision')}
                   className={`flex items-center gap-2 px-6 py-2 rounded-md font-medium transition-all ${activeTab === 'revision'
-                      ? 'bg-white text-indigo-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white text-indigo-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
                     }`}
                 >
                   <Brain size={18} />
@@ -81,8 +81,8 @@ function StudentDashboard() {
             <button
               onClick={() => setActiveTab('practice')}
               className={`flex items-center justify-center gap-2 p-3 rounded-lg font-medium border ${activeTab === 'practice'
-                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                  : 'bg-white border-gray-200 text-gray-600'
+                ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                : 'bg-white border-gray-200 text-gray-600'
                 }`}
             >
               <BookOpen size={18} />
@@ -91,8 +91,8 @@ function StudentDashboard() {
             <button
               onClick={() => setActiveTab('revision')}
               className={`flex items-center justify-center gap-2 p-3 rounded-lg font-medium border ${activeTab === 'revision'
-                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                  : 'bg-white border-gray-200 text-gray-600'
+                ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                : 'bg-white border-gray-200 text-gray-600'
                 }`}
             >
               <Brain size={18} />
@@ -108,7 +108,7 @@ function StudentDashboard() {
           <div className="bg-white rounded-lg shadow-sm p-6 h-[calc(100vh-140px)] overflow-hidden flex flex-col">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex-shrink-0">Question Bank Practice</h2>
             <div className="flex-1 overflow-y-auto">
-              <QuestionLibrary showCreateButton={false} />
+              <QuestionLibrary showCreateButton={true} />
             </div>
           </div>
         )}

@@ -3,6 +3,13 @@ from app.api.v1.endpoints import questions, auth, ai, profile, student, teacher
 
 api_router = APIRouter()
 
+# Include teacher endpoints (Moved to top for debugging priority)
+api_router.include_router(
+    teacher.router,
+    prefix="/teacher",
+    tags=["teacher"]
+)
+
 # Include auth endpoints
 api_router.include_router(
     auth.router,
@@ -36,11 +43,4 @@ api_router.include_router(
     student.router,
     prefix="/student",
     tags=["student"]
-)
-
-# Include teacher endpoints
-api_router.include_router(
-    teacher.router,
-    prefix="/teacher",
-    tags=["teacher"]
 )

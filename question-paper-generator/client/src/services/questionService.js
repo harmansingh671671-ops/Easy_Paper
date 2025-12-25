@@ -5,7 +5,7 @@ const questionService = {
   getAllQuestions: async (filters = {}) => {
     try {
       const params = new URLSearchParams();
-      
+
       // Add filters to query params
       if (filters.page) params.append('page', filters.page);
       if (filters.page_size) params.append('page_size', filters.page_size);
@@ -17,7 +17,7 @@ const questionService = {
       if (filters.is_starred !== undefined) params.append('is_starred', filters.is_starred);
       if (filters.search) params.append('search', filters.search);
       if (filters.category) params.append('category', filters.category);
-      
+
       const response = await api.get(`/questions/?${params.toString()}`);
       return response.data;
     } catch (error) {
@@ -82,31 +82,39 @@ const questionService = {
   },
 
   // Get statistics
-    getStatistics: async () => {
-      try {
-        const response = await api.get('/questions/stats/overview');
-        return response.data;
-      } catch (error) {
-        console.error('Error fetching statistics:', error);
-        throw error;
+  getStatistics: async () => {
+    try {
+      const response = await api.get('/questions/stats/overview');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+      throw error;
+    }
+  },
+
+  // Generate PDF from question IDs
+  generatePdf: async (argsOrIds, title) => {
+    try {
+      let payload = {};
+      if (Array.isArray(argsOrIds)) {
+        // Old signature: (ids, title)
+        payload = { question_ids: argsOrIds, title: title };
+      } else {
+        // New signature: (object)
+        payload = argsOrIds;
       }
-    },
-  
-    // Generate PDF from question IDs
-    generatePdf: async (questionIds, title) => {
-      try {
-        const response = await api.post(
-          '/questions/generate-pdf',
-          { question_ids: questionIds, title: title },
-          { responseType: 'blob' } // Important for file downloads
-        );
-        return response.data;
-      } catch (error) {
-        console.error('Error generating PDF:', error);
-        throw error;
-      }
-    },
-  };
-  
-  export default questionService;
-  
+
+      const response = await api.post(
+        '/questions/generate-pdf',
+        payload,
+        { responseType: 'blob' } // Important for file downloads
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      throw error;
+    }
+  },
+};
+
+export default questionService;

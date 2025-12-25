@@ -57,7 +57,7 @@ class PDFService:
         text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
         return text
 
-    def generate_pdf(self, questions, title="Question Paper"):
+    def generate_pdf(self, questions, title="Question Paper", duration=None, instructions=None, total_marks_override=None):
         """Generate PDF from questions list using ReportLab."""
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(
@@ -74,16 +74,30 @@ class PDFService:
         
         # Title
         story.append(Paragraph(self._sanitize_text(title), self.styles['Title']))
+        story.append(Spacer(1, 0.5*cm))
+
+        # Metadata (Marks, Duration, Date)
+        calculated_marks = sum(q.get('marks', 1) for q in questions)
+        final_marks = total_marks_override if total_marks_override is not None else calculated_marks
         
-        # Metadata
-        total_marks = sum(q.get('marks', 1) for q in questions)
-        meta_text = (
-            f"<b>Total Marks:</b> {total_marks} | "
-            f"<b>Questions:</b> {len(questions)} | "
-            f"<b>Date:</b> {datetime.now().strftime('%d %B %Y')}"
-        )
+        meta_parts = []
+        meta_parts.append(f"<b>Total Marks:</b> {final_marks}")
+        if duration:
+            meta_parts.append(f"<b>Duration:</b> {duration} min")
+        meta_parts.append(f"<b>Date:</b> {datetime.now().strftime('%d %B %Y')}")
+        
+        meta_text = " | ".join(meta_parts)
         story.append(Paragraph(meta_text, self.styles['Normal']))
         story.append(Spacer(1, 0.5*cm))
+
+        # Instructions
+        if instructions:
+            story.append(Paragraph("<b>Instructions:</b>", self.styles['Normal']))
+            # Splitting instructions by newline to create bullet points or lines
+            for line in instructions.split('\n'):
+                if line.strip():
+                    story.append(Paragraph(self._sanitize_text(line.strip()), self.styles['OptionText'])) # Using OptionText for indented style
+            story.append(Spacer(1, 0.5*cm))
         
         # Questions
         for i, q in enumerate(questions, 1):
