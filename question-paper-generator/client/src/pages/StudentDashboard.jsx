@@ -1,18 +1,17 @@
 import { useState } from 'react';
-import { useUser, SignOutButton } from '@clerk/clerk-react';
+import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../App';
 import {
   BookOpen,
   Brain,
   LogOut,
-  PenTool,
   GraduationCap
 } from 'lucide-react';
 import QuestionLibrary from '../components/QuestionLibrary';
 import RevisionTab from '../components/RevisionTab';
 
 function StudentDashboard() {
-  const { user } = useUser();
+  const { user, signOut } = useAuth();
   const { profile } = useProfile();
   const [activeTab, setActiveTab] = useState('practice'); // 'practice', 'revision'
 
@@ -33,7 +32,7 @@ function StudentDashboard() {
                 <GraduationCap size={24} />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Easy Paper</h1>
+                <h1 className="text-2xl font-bold text-gray-900">BudyforStudy</h1>
                 <p className="text-sm text-gray-600">
                   {categoryLabels[profile?.category] || 'Student'} Dashboard
                 </p>
@@ -67,37 +66,15 @@ function StudentDashboard() {
             </div>
 
             <div className="flex items-center gap-4">
-              <span className="hidden sm:inline text-sm text-gray-600">{user?.primaryEmailAddress?.emailAddress}</span>
-              <SignOutButton>
-                <button className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Logout">
-                  <LogOut size={20} />
-                </button>
-              </SignOutButton>
+              <span className="hidden sm:inline text-sm text-gray-600">{user?.email}</span>
+              <button
+                onClick={() => signOut()}
+                className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title="Logout"
+              >
+                <LogOut size={20} />
+              </button>
             </div>
-          </div>
-
-          {/* Mobile Tabs */}
-          <div className="md:hidden mt-4 grid grid-cols-2 gap-2">
-            <button
-              onClick={() => setActiveTab('practice')}
-              className={`flex items-center justify-center gap-2 p-3 rounded-lg font-medium border ${activeTab === 'practice'
-                ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                : 'bg-white border-gray-200 text-gray-600'
-                }`}
-            >
-              <BookOpen size={18} />
-              Practice
-            </button>
-            <button
-              onClick={() => setActiveTab('revision')}
-              className={`flex items-center justify-center gap-2 p-3 rounded-lg font-medium border ${activeTab === 'revision'
-                ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                : 'bg-white border-gray-200 text-gray-600'
-                }`}
-            >
-              <Brain size={18} />
-              Revision
-            </button>
           </div>
         </div>
       </header>

@@ -6,10 +6,10 @@ const aiService = {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      
+
       const response = await api.post('/ai/extract-pdf-text', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': undefined,
         },
       });
       return response.data;
@@ -25,8 +25,12 @@ const aiService = {
       const formData = new FormData();
       formData.append('content', content);
       if (topic) formData.append('topic', topic);
-      
-      const response = await api.post('/ai/generate-notes', formData);
+
+      const response = await api.post('/ai/generate-notes', formData, {
+        headers: {
+          'Content-Type': undefined,
+        },
+      });
       return response.data;
     } catch (error) {
       console.error('Error generating notes:', error);
@@ -40,8 +44,12 @@ const aiService = {
       const formData = new FormData();
       formData.append('content', content);
       formData.append('num_cards', numCards);
-      
-      const response = await api.post('/ai/generate-flashcards', formData);
+
+      const response = await api.post('/ai/generate-flashcards', formData, {
+        headers: {
+          'Content-Type': undefined,
+        },
+      });
       return response.data;
     } catch (error) {
       console.error('Error generating flashcards:', error);
@@ -56,8 +64,12 @@ const aiService = {
       formData.append('content', content);
       formData.append('num_questions', numQuestions);
       formData.append('question_type', questionType);
-      
-      const response = await api.post('/ai/generate-quiz', formData);
+
+      const response = await api.post('/ai/generate-quiz', formData, {
+        headers: {
+          'Content-Type': undefined,
+        },
+      });
       return response.data;
     } catch (error) {
       console.error('Error generating quiz:', error);
@@ -71,8 +83,12 @@ const aiService = {
       const formData = new FormData();
       formData.append('content', content);
       if (topic) formData.append('topic', topic);
-      
-      const response = await api.post('/ai/generate-mindmap', formData);
+
+      const response = await api.post('/ai/generate-mindmap', formData, {
+        headers: {
+          'Content-Type': undefined,
+        },
+      });
       return response.data;
     } catch (error) {
       console.error('Error generating mind map:', error);
@@ -87,8 +103,12 @@ const aiService = {
       formData.append('topic', topic);
       formData.append('duration', duration);
       formData.append('level', level);
-      
-      const response = await api.post('/ai/generate-lecture-outline', formData);
+
+      const response = await api.post('/ai/generate-lecture-outline', formData, {
+        headers: {
+          'Content-Type': undefined,
+        },
+      });
       return response.data;
     } catch (error) {
       console.error('Error generating lecture outline:', error);
@@ -103,10 +123,10 @@ const aiService = {
       const formData = new FormData();
       formData.append('file', file);
       if (topic) formData.append('topic', topic);
-      
+
       const response = await api.post('/ai/process-pdf', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': undefined,
         },
       });
       return response.data;

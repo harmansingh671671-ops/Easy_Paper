@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useUser, SignOutButton } from '@clerk/clerk-react';
+import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../App';
 import {
   BookOpen,
@@ -14,7 +14,7 @@ import TeacherPaperCreator from '../components/TeacherPaperCreator';
 import teacherService from '../services/teacherService';
 
 function TeacherDashboard() {
-  const { user } = useUser();
+  const { user, signOut } = useAuth();
   const { profile } = useProfile();
   const [activeTab, setActiveTab] = useState('library');
   const [viewState, setViewState] = useState('list'); // 'list' or 'create_paper'
@@ -61,20 +61,21 @@ function TeacherDashboard() {
             <div className="flex items-center gap-3">
               <BookOpen className="text-indigo-600" size={32} />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Easy Paper</h1>
+                <h1 className="text-2xl font-bold text-gray-900">BudyforStudy</h1>
                 <p className="text-sm text-gray-600">
                   {categoryLabels[profile?.category] || 'Teacher'} Dashboard
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">{user?.primaryEmailAddress?.emailAddress}</span>
-              <SignOutButton>
-                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                  <LogOut size={20} />
-                  <span>Logout</span>
-                </button>
-              </SignOutButton>
+              <span className="text-sm text-gray-600">{user?.email}</span>
+              <button
+                onClick={() => signOut()}
+                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <LogOut size={20} />
+                <span>Logout</span>
+              </button>
             </div>
           </div>
         </div>

@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '../App';
 import api from '../services/api';
 import { BookOpen, GraduationCap, School, Trophy, User, Loader } from 'lucide-react';
 
 function Onboarding() {
-  const { user } = useUser();
+  const { user, signOut } = useAuth();
   const { setProfile } = useProfile();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -15,14 +15,54 @@ function Onboarding() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleRoleSelect = (selectedRole) => {
+  // Check for existing partial profile
+  useEffect(() => {
+    const checkExistingProfile = async () => {
+      try {
+        setLoading(true);
+        // We can just use the context profile if available, 
+        // but fetching fresh might be safer for "resuming" logic if context isn't ready
+        const { data: profile } = await api.get('/profile/me');
+        if (profile) {
+          if (profile.role) {
+            setRole(profile.role);
+            if (!profile.category) {
+              setStep(2);
+            } else {
+              navigate('/dashboard');
+            }
+          }
+          // Update context just in case
+          setProfile(profile);
+        }
+      } catch (err) {
+        // 404 is expected for new users
+        if (err.response?.status !== 404) {
+          console.error('Error checking profile:', err);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkExistingProfile();
+  }, [navigate, setProfile]);
+
+  const handleRoleSelect = async (selectedRole) => {
     setRole(selectedRole);
-    if (selectedRole === 'teacher') {
-      // Teachers don't need category, go directly to submit
-      handleSubmit(selectedRole, null);
-    } else {
-      // Students need to select category
+    setLoading(true);
+    try {
+      // Save step 1 (Role) immediately
+      const response = await api.post('/profile', {
+        role: selectedRole,
+      });
+      setProfile(response.data);
       setStep(2);
+    } catch (err) {
+      console.error('Failed to save role:', err);
+      setError('Failed to save progress. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,29 +72,21 @@ function Onboarding() {
   };
 
   const handleSubmit = async (role, category) => {
-    if (!role) {
-      setError('Please select your role');
-      return;
-    }
-
-    if (role === 'student' && !category) {
-      setError('Please select your category');
-      return;
-    }
+    if (!role || !category) return;
 
     setLoading(true);
     setError('');
 
     try {
+      // Update profile with category (Step 2)
       const response = await api.post('/profile', {
-        clerk_user_id: user?.id,
         role,
-        category: role === 'student' ? category : null,
+        category,
       });
 
       // Update profile context
       setProfile(response.data);
-      
+
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
@@ -81,8 +113,17 @@ function Onboarding() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-full mb-4">
             <BookOpen className="text-white" size={32} />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Welcome to Easy Paper!</h1>
-          <p className="text-gray-600 mt-2">Let's set up your profile</p>
+          <h1 className="text-3xl font-bold text-gray-900">Welcome to BudyforStudy!</h1>
+          <p className="text-gray-600 mt-2">
+            Logging in from <span className="font-semibold text-indigo-600">{user?.email}</span>
+            <button
+              onClick={() => signOut()}
+              className="ml-2 text-sm text-gray-500 hover:text-red-600 underline"
+            >
+              (Not you? Logout)
+            </button>
+          </p>
+          <p className="text-gray-600 mt-1">Let's set up your profile</p>
         </div>
 
         {/* Progress Indicator */}
@@ -91,11 +132,10 @@ function Onboarding() {
             {[1, 2].map((s) => (
               <div
                 key={s}
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${
-                  step >= s
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-200 text-gray-500'
-                }`}
+                className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${step >= s
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-200 text-gray-500'
+                  }`}
               >
                 {s}
               </div>
@@ -140,8 +180,8 @@ function Onboarding() {
           </div>
         )}
 
-        {/* Step 2: Category Selection (Students only) */}
-        {step === 2 && role === 'student' && (
+        {/* Step 2: Category Selection (Students and Teachers) */}
+        {step === 2 && (
           <div className="space-y-4">
             <button
               onClick={() => setStep(1)}
@@ -150,38 +190,35 @@ function Onboarding() {
               ← Back
             </button>
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              What category are you in?
+              {role === 'teacher' ? 'What category do you teach?' : 'What category are you in?'}
             </h2>
             <div className="grid grid-cols-3 gap-4">
               <button
                 onClick={() => handleCategorySelect('college')}
-                className={`p-6 border-2 rounded-lg transition-all text-center ${
-                  category === 'college'
-                    ? 'border-indigo-500 bg-indigo-50'
-                    : 'border-gray-200 hover:border-indigo-300'
-                }`}
+                className={`p-6 border-2 rounded-lg transition-all text-center ${category === 'college'
+                  ? 'border-indigo-500 bg-indigo-50'
+                  : 'border-gray-200 hover:border-indigo-300'
+                  }`}
               >
                 <GraduationCap className="text-indigo-600 mb-3 mx-auto" size={32} />
                 <h3 className="font-semibold text-gray-900">College</h3>
               </button>
               <button
                 onClick={() => handleCategorySelect('school')}
-                className={`p-6 border-2 rounded-lg transition-all text-center ${
-                  category === 'school'
-                    ? 'border-indigo-500 bg-indigo-50'
-                    : 'border-gray-200 hover:border-indigo-300'
-                }`}
+                className={`p-6 border-2 rounded-lg transition-all text-center ${category === 'school'
+                  ? 'border-indigo-500 bg-indigo-50'
+                  : 'border-gray-200 hover:border-indigo-300'
+                  }`}
               >
                 <School className="text-indigo-600 mb-3 mx-auto" size={32} />
                 <h3 className="font-semibold text-gray-900">School</h3>
               </button>
               <button
                 onClick={() => handleCategorySelect('competition')}
-                className={`p-6 border-2 rounded-lg transition-all text-center ${
-                  category === 'competition'
-                    ? 'border-indigo-500 bg-indigo-50'
-                    : 'border-gray-200 hover:border-indigo-300'
-                }`}
+                className={`p-6 border-2 rounded-lg transition-all text-center ${category === 'competition'
+                  ? 'border-indigo-500 bg-indigo-50'
+                  : 'border-gray-200 hover:border-indigo-300'
+                  }`}
               >
                 <Trophy className="text-indigo-600 mb-3 mx-auto" size={32} />
                 <h3 className="font-semibold text-gray-900">Competition</h3>
@@ -195,4 +232,3 @@ function Onboarding() {
 }
 
 export default Onboarding;
-

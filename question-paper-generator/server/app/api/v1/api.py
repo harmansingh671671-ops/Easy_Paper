@@ -34,7 +34,7 @@ api_router.include_router(
 # Include profile endpoints
 api_router.include_router(
     profile.router,
-    prefix="",
+    prefix="/profile",
     tags=["profile"]
 )
 

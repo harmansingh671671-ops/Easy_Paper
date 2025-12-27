@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Header
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from app.core.auth_deps import get_current_user
 from typing import Optional
 from app.services.ai_service import AIService
 from app.core.database import get_supabase
@@ -7,24 +8,29 @@ import os
 
 router = APIRouter()
 
+import logging
+
+# Configure logger
+logger = logging.getLogger(__name__)
+
+from functools import lru_cache
+
+@lru_cache()
 def get_ai_service() -> AIService:
-    """Get AI service instance"""
+    """Get AI service singleton instance"""
     try:
         return AIService()
     except ValueError as e:
+        logger.error(f"Failed to init AIService: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # Simple auth check - verify user is logged in (has Clerk user ID)
-def verify_user(x_clerk_user_id: Optional[str] = Header(None, alias="X-Clerk-User-Id")):
-    """Verify user is authenticated"""
-    if not x_clerk_user_id:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    return x_clerk_user_id
+
 
 @router.post("/extract-pdf-text")
 async def extract_pdf_text(
     file: UploadFile = File(...),
-    user_id: str = Depends(verify_user)
+    user: dict = Depends(get_current_user)
 ):
     """Extract text from uploaded PDF"""
     try:
@@ -39,7 +45,7 @@ async def extract_pdf_text(
 async def generate_notes(
     content: str = Form(...),
     topic: Optional[str] = Form(None),
-    user_id: str = Depends(verify_user)
+    user: dict = Depends(get_current_user)
 ):
     """Generate short notes from content"""
     try:
@@ -53,7 +59,7 @@ async def generate_notes(
 async def generate_flashcards(
     content: str = Form(...),
     num_cards: int = Form(10),
-    user_id: str = Depends(verify_user)
+    user: dict = Depends(get_current_user)
 ):
     """Generate flashcards from content"""
     try:
@@ -68,7 +74,7 @@ async def generate_quiz(
     content: str = Form(...),
     num_questions: int = Form(10),
     question_type: str = Form("mixed"),
-    user_id: str = Depends(verify_user)
+    user: dict = Depends(get_current_user)
 ):
     """Generate quiz questions from content"""
     try:
@@ -82,7 +88,7 @@ async def generate_quiz(
 async def generate_mindmap(
     content: str = Form(...),
     topic: Optional[str] = Form(None),
-    user_id: str = Depends(verify_user)
+    user: dict = Depends(get_current_user)
 ):
     """Generate mind map structure from content"""
     try:
@@ -97,7 +103,7 @@ async def generate_lecture_outline(
     topic: str = Form(...),
     duration: int = Form(60),
     level: str = Form("intermediate"),
-    user_id: str = Depends(verify_user)
+    user: dict = Depends(get_current_user)
 ):
     """Generate lecture preparation outline"""
     try:
@@ -111,26 +117,53 @@ async def generate_lecture_outline(
 async def process_pdf(
     file: UploadFile = File(...),
     topic: Optional[str] = Form(None),
-    user_id: str = Depends(verify_user)
+    user: dict = Depends(get_current_user)
 ):
     """Process PDF and generate short notes only (other features queued from frontend)"""
     try:
+        logger.info(f"Processing PDF: {file.filename}")
         ai_service = get_ai_service()
         pdf_bytes = await file.read()
+        logger.debug(f"Read PDF bytes: {len(pdf_bytes)}")
         
-        # Extract text (hidden from user)
-        text = ai_service.extract_text_from_pdf(pdf_bytes)
+        # 1. Save upload to temp file
+        import tempfile
+        import pathlib
         
-        # Generate short notes only (fastest response)
-        notes = await ai_service.generate_short_notes(text, topic)
+        # Create temp file with .pdf extension
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            tmp.write(pdf_bytes)
+            tmp_path = tmp.name
+            
+        logger.info(f"Saved temp PDF to {tmp_path}")
         
-        # Return minimal response - frontend will queue other features
+        try:
+            # 2. Upload to Gemini (Multimodal)
+            uploaded_file = await ai_service.upload_file(tmp_path)
+            logger.info("Successfully uploaded PDF to Gemini")
+            
+            # 3. Generate Notes from File
+            notes = await ai_service.generate_short_notes(uploaded_file, topic)
+            logger.info("Successfully generated notes from PDF")
+            
+            # Clean up temp file
+            os.unlink(tmp_path)
+            
+        except Exception as e:
+            # Try to cleanup if failed
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            raise e
+        
+        # Return response
         return {
             "notes": notes,
+            "text": "(Processed as File directly - Text not extracted locally)", 
             "filename": file.filename,
-            "has_more": True  # Signal to frontend to queue other features
+            "has_more": True 
         }
     except Exception as e:
+        logger.error(f"Process PDF failed: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=str(e))
 
 

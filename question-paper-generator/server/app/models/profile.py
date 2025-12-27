@@ -1,17 +1,18 @@
 from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel
+from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
 
 class ProfileBase(BaseModel):
-    clerk_user_id: str
     role: str  # 'teacher' or 'student'
     category: Optional[str] = None  # 'college', 'school', 'competition' or None
+    categories: Optional[List[str]] = None
 
 class ProfileCreate(BaseModel):
-    clerk_user_id: Optional[str] = None
     role: str  # 'teacher' or 'student'
     category: Optional[str] = None  # 'college', 'school', 'competition' or None
+    categories: Optional[List[str]] = None
 
 class Profile(ProfileBase):
     id: UUID
@@ -24,6 +25,7 @@ class Profile(ProfileBase):
 class ProfileUpdate(BaseModel):
     role: Optional[str] = None
     category: Optional[str] = None
+    categories: Optional[List[str]] = None
 
 
 

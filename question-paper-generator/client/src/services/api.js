@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { supabase } from '../lib/supabaseClient';
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -11,36 +12,16 @@ const api = axios.create({
 // Add request interceptor for authentication
 api.interceptors.request.use(
   async (config) => {
-    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    // console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
 
     try {
-      const clerk = window.Clerk;
-      if (clerk) {
-        // Add Clerk User ID header
-        if (clerk.user && clerk.user.id) {
-          config.headers['X-Clerk-User-Id'] = clerk.user.id;
-          console.log('X-Clerk-User-Id header injected.');
-        } else {
-          console.log('Clerk user not available.');
-        }
+      const { data: { session } } = await supabase.auth.getSession();
 
-        // Add JWT token for authorization
-        if (clerk.session) {
-          const token = await clerk.session.getToken();
-          if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-            console.log('Authorization header (JWT) injected.');
-          } else {
-            console.log('No JWT token found in session.');
-          }
-        } else {
-          console.log('Clerk session not available.');
-        }
-      } else {
-        console.log('Clerk not available on window object.');
+      if (session?.access_token) {
+        config.headers['Authorization'] = `Bearer ${session.access_token}`;
       }
     } catch (error) {
-      console.error('Error setting auth headers:', error);
+      console.error('Error getting session for API:', error);
     }
 
     return config;
