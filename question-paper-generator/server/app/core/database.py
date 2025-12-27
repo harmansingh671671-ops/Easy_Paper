@@ -7,13 +7,13 @@ load_dotenv()
 
 # Supabase credentials
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY") or os.getenv("SUPABASE_KEY")
 
 # Validate environment variables
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError(
         "Missing Supabase credentials. "
-        "Please set SUPABASE_URL and SUPABASE_KEY in .env file"
+        "Please set SUPABASE_URL and SUPABASE_KEY (or SUPABASE_SERVICE_KEY) in .env file"
     )
 
 # Create Supabase client

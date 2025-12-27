@@ -52,50 +52,45 @@ function PdfUpload({ onProcessed, topic: initialTopic = '' }) {
     try {
       // Step 1: Process PDF and get notes (fastest - shown immediately)
       const data = await aiService.processPdf(file, topic || undefined);
-      
+
       // Show notes immediately
       const initialResult = { notes: data.notes, filename: data.filename };
       setResult(initialResult);
       if (onProcessed) {
         onProcessed(initialResult);
       }
-      
+
       setLoading(false); // User sees notes now
-      
-      // Step 2: Queue other features in order (background, using notes as context)
-      // Use notes as compressed context to save tokens
-      const contextForNext = data.notes;
-      
-      // Queue: Mind Map → Quiz → Flashcards
-      // Mind Map (queued after notes)
-      aiService.generateMindMap(contextForNext, topic || undefined)
-        .then(res => {
-          setResult(prev => ({ ...prev, mindmap: res.mindmap }));
-          if (onProcessed) {
-            onProcessed(prev => ({ ...prev, mindmap: res.mindmap }));
-          }
-        })
-        .catch(() => {});
-      
-      // Quiz (queued after mind map)
-      aiService.generateQuiz(contextForNext, 10, 'mixed')
-        .then(res => {
-          setResult(prev => ({ ...prev, quiz: res.questions }));
-          if (onProcessed) {
-            onProcessed(prev => ({ ...prev, quiz: res.questions }));
-          }
-        })
-        .catch(() => {});
-      
-      // Flashcards (queued after quiz)
-      aiService.generateFlashcards(contextForNext, 10)
-        .then(res => {
-          setResult(prev => ({ ...prev, flashcards: res.flashcards }));
-          if (onProcessed) {
-            onProcessed(prev => ({ ...prev, flashcards: res.flashcards }));
-          }
-        })
-        .catch(() => {});
+
+      // Step 2: Queue other features sequentially to reduce API load
+      const contextForNext = data.text || data.notes;
+
+      // Sequence: Notes (Done) -> Quiz -> Mind Map -> Flashcards
+      try {
+        // 1. Generate Quiz
+        console.log("Starting Quiz Generation...");
+        const quizRes = await aiService.generateQuiz(contextForNext, 10, 'mixed');
+        setResult(prev => ({ ...prev, quiz: quizRes.questions }));
+        if (onProcessed) onProcessed(prev => ({ ...prev, quiz: quizRes.questions }));
+
+        // 2. Generate Mind Map
+        console.log("Starting Mind Map Generation...");
+        const mmRes = await aiService.generateMindMap(contextForNext, topic || undefined);
+        setResult(prev => ({ ...prev, mindmap: mmRes.mindmap }));
+        if (onProcessed) onProcessed(prev => ({ ...prev, mindmap: mmRes.mindmap }));
+
+        // 3. Generate Flashcards
+        console.log("Starting Flashcard Generation...");
+        const fcRes = await aiService.generateFlashcards(contextForNext, 10);
+        setResult(prev => ({ ...prev, flashcards: fcRes.flashcards }));
+        if (onProcessed) onProcessed(prev => ({ ...prev, flashcards: fcRes.flashcards }));
+
+      } catch (seqError) {
+        console.error("Sequential generation error:", seqError);
+        // Don't block UI if one fails, but maybe show partial success?
+        // Current error handler at outer level catches this. 
+        // We might want to just log it and let the user see what finished.
+      }
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to process PDF. Please try again.');
       setLoading(false);
@@ -132,7 +127,7 @@ function PdfUpload({ onProcessed, topic: initialTopic = '' }) {
           onChange={handleFileSelect}
           className="hidden"
         />
-        
+
         {file ? (
           <div className="space-y-2">
             <CheckCircle className="mx-auto text-green-600" size={48} />

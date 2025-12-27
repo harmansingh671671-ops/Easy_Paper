@@ -1,9 +1,14 @@
+import os
+from dotenv import load_dotenv
+
+# Load env vars before importing app modules to ensure config is ready
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.api import api_router
-import os
 
-app = FastAPI(title="Question Paper Generator API")
+app = FastAPI(title="BudyforStudy API")
 
 # Configure CORS origins from env var `ALLOW_ORIGINS` (comma-separated).
 # If set to '*', allow all origins (useful for quick local testing).

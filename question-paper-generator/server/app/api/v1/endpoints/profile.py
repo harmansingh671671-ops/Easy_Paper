@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends
+from app.core.auth_deps import get_current_user
 from app.models.profile import Profile, ProfileCreate, ProfileUpdate
 from app.services.profile_service import ProfileService
 from app.core.database import get_supabase
@@ -13,57 +14,42 @@ def get_profile_service(supabase: Client = Depends(get_supabase)) -> ProfileServ
 @router.post("/profile", response_model=Profile, status_code=201)
 async def create_or_update_profile(
     profile_data: ProfileCreate,
-    x_clerk_user_id: Optional[str] = Header(None, alias="X-Clerk-User-Id"),
+    user: dict = Depends(get_current_user),
     service: ProfileService = Depends(get_profile_service)
 ):
-    """Create or update user profile"""
-    clerk_user_id = x_clerk_user_id or profile_data.clerk_user_id
-
-    if not clerk_user_id:
-        raise HTTPException(status_code=400, detail="Clerk user ID is required")
-
+    """
+    Create or update user profile
+    """
+    # Use Supabase user ID from the token
     try:
-        profile = await service.create_or_update_profile(
-            clerk_user_id=clerk_user_id,
-            profile_data=profile_data
-        )
-        return profile
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        print(f"Creating profile for user: {user.id}")
+        return await service.create_or_update_profile(user.id, profile_data)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to save profile: {str(e)}")
+        print(f"Error creating profile: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
-@router.get("/profile/me", response_model=Profile)
+@router.get("/me", response_model=Profile)
 async def get_my_profile(
-    x_clerk_user_id: Optional[str] = Header(None, alias="X-Clerk-User-Id"),
+    user: dict = Depends(get_current_user),
     service: ProfileService = Depends(get_profile_service)
 ):
-    """Get current user's profile"""
-    if not x_clerk_user_id:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
-    profile = await service.get_profile_by_clerk_id(x_clerk_user_id)
+    """
+    Get current user's profile
+    """
+    profile = await service.get_profile_by_user_id(user.id)
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
     return profile
 
-@router.put("/profile/me", response_model=Profile)
+@router.put("/me", response_model=Profile)
 async def update_my_profile(
-    profile_update: ProfileUpdate,
-    x_clerk_user_id: Optional[str] = Header(None, alias="X-Clerk-User-Id"),
+    profile_data: ProfileUpdate,
+    user: dict = Depends(get_current_user),
     service: ProfileService = Depends(get_profile_service)
 ):
-    """Update current user's profile"""
-    if not x_clerk_user_id:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
-    updated_profile = await service.update_profile(x_clerk_user_id, profile_update)
-    if not updated_profile:
-        raise HTTPException(status_code=400, detail="Failed to update profile")
-    return updated_profile
-
-
-
-
-
-
+    """
+    Update current user's profile
+    """
+    return await service.update_profile(user.id, profile_data)

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import authService from '../services/authService';
+import { supabase } from '../lib/supabaseClient';
 
 const AuthContext = createContext();
 
@@ -13,71 +13,46 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const initAuth = async () => {
-      const storedUser = authService.getStoredUser();
-      if (storedUser && authService.isAuthenticated()) {
-        // Verify token is still valid
-        try {
-          const currentUser = await authService.getCurrentUser();
-          setUser(currentUser);
-        } catch (error) {
-          // Token invalid, clear storage
-          authService.logout();
-        }
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+      } catch (error) {
+        console.error('Error getting session:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    initAuth();
+    getInitialSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const login = async (email, password) => {
-    try {
-      const result = await authService.login(email, password);
-      setUser(result.user);
-      return result;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const register = async (userData) => {
-    try {
-      const result = await authService.register(userData);
-      setUser(result.user);
-      return result;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const logout = () => {
-    authService.logout();
-    setUser(null);
-  };
-
-  const updateUser = async (userData) => {
-    try {
-      const updatedUser = await authService.updateProfile(userData);
-      setUser(updatedUser);
-      return updatedUser;
-    } catch (error) {
-      throw error;
-    }
-  };
-
   const value = {
+    signUp: (data) => supabase.auth.signUp(data),
+    signIn: (data) => supabase.auth.signInWithPassword(data),
+    signInWithOAuth: (provider) => supabase.auth.signInWithOAuth({ provider }),
+    signOut: () => supabase.auth.signOut(),
     user,
+    session,
     loading,
-    login,
-    register,
-    logout,
-    updateUser,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user, // Helper compatible with old code if needed
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

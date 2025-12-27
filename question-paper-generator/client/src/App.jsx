@@ -1,11 +1,13 @@
 import React, { useEffect, useState, createContext, useContext } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { SignedIn, SignedOut, SignIn, SignUp, useUser, useAuth } from '@clerk/clerk-react';
+import { useAuth } from './contexts/AuthContext';
 import { PaperProvider } from './contexts/PaperContext';
 import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
 import Onboarding from './pages/Onboarding';
 import LoadingSpinner from './components/LoadingSpinner';
+import SignIn from './pages/SignIn';
+import SignUp from './pages/SignUp';
 import api from './services/api';
 
 // Profile Context to store user role and category
@@ -17,13 +19,12 @@ export const useProfile = () => {
 };
 
 function ProfileProvider({ children }) {
-  const { user, isLoaded } = useUser();
-  const { getToken } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (authLoading) return;
 
     if (!user) {
       setProfile(null);
@@ -49,7 +50,7 @@ function ProfileProvider({ children }) {
     };
 
     fetchProfile();
-  }, [user, isLoaded, getToken]); // Add getToken to dependency array
+  }, [user, authLoading]);
 
   return (
     <ProfileContext.Provider value={{ profile, loading, setProfile }}>
@@ -58,27 +59,26 @@ function ProfileProvider({ children }) {
   );
 }
 
-// Protected Route Component using Clerk
+// Protected Route Component using Supabase Auth
 function ProtectedRoute({ children }) {
-  const { isLoaded } = useUser();
+  const { user, loading } = useAuth();
 
-  if (!isLoaded) {
+  if (loading) {
     return <LoadingSpinner />;
   }
 
-  return (
-    <SignedIn>
-      {children}
-    </SignedIn>
-  );
+  if (!user) {
+    return <Navigate to="/sign-in" replace />;
+  }
+
+  return children;
 }
 
 // Route that requires profile (onboarding completed)
 function ProfileRequiredRoute({ children }) {
   const { profile, loading } = useProfile();
-  const { isLoaded } = useUser();
 
-  if (!isLoaded || loading) {
+  if (loading) {
     return <LoadingSpinner />;
   }
 
@@ -101,6 +101,11 @@ function DashboardRoute() {
     return <Navigate to="/onboarding" replace />;
   }
 
+  // Ensure profile is complete (has category)
+  if (!profile.category) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   if (profile.role === 'student') {
     return <StudentDashboard />;
   } else if (profile.role === 'teacher') {
@@ -111,28 +116,20 @@ function DashboardRoute() {
 }
 
 function AppRoutes() {
+  const { user, loading } = useAuth();
+
+  if (loading) return <LoadingSpinner />;
+
   return (
     <Routes>
-      {/* Public routes - Clerk handles sign in/up */}
+      {/* Public routes */}
       <Route
-        path="/sign-in/*"
-        element={
-          <div className="min-h-screen flex items-center justify-center">
-            <SignedOut>
-              <SignIn routing="path" path="/sign-in" />
-            </SignedOut>
-          </div>
-        }
+        path="/sign-in"
+        element={!user ? <SignIn /> : <Navigate to="/dashboard" replace />}
       />
       <Route
-        path="/sign-up/*"
-        element={
-          <div className="min-h-screen flex items-center justify-center">
-            <SignedOut>
-              <SignUp routing="path" path="/sign-up" />
-            </SignedOut>
-          </div>
-        }
+        path="/sign-up"
+        element={!user ? <SignUp /> : <Navigate to="/dashboard" replace />}
       />
 
       {/* Onboarding - requires sign in but not profile */}
@@ -161,14 +158,7 @@ function AppRoutes() {
       <Route
         path="/"
         element={
-          <>
-            <SignedIn>
-              <Navigate to="/dashboard" replace />
-            </SignedIn>
-            <SignedOut>
-              <Navigate to="/sign-in" replace />
-            </SignedOut>
-          </>
+          user ? <Navigate to="/dashboard" replace /> : <Navigate to="/sign-in" replace />
         }
       />
       <Route
