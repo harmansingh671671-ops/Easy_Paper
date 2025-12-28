@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, BackgroundTasks
+from fastapi.responses import StreamingResponse
 from app.core.auth_deps import get_current_user
 from typing import Optional
 from app.services.ai_service import AIService
@@ -45,26 +46,76 @@ async def extract_pdf_text(
 async def generate_notes(
     content: str = Form(...),
     topic: Optional[str] = Form(None),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase)
 ):
     """Generate short notes from content"""
     try:
+        user_id = user.id
+        # Check DB if topic provided (and not re-generating explicitly?)
+        # For now, if topic & user match, return existing.
+        # Note: If generating from PDF content without a topic, we usually assign filename as topic.
+        
+        search_topic = topic
+        if not search_topic and len(content) < 200: # Heuristic: if content is short, it might be the topic
+             search_topic = content
+
+        if search_topic:
+             existing = supabase.table("lecture_notes").select("*").eq("user_id", user_id).eq("topic", search_topic).execute()
+             if existing.data and len(existing.data) > 0:
+                  logger.info(f"Returning cached notes for topic: {search_topic}")
+                  return {"notes": existing.data[0]['content']}
+
         ai_service = get_ai_service()
         notes = await ai_service.generate_short_notes(content, topic)
+        
+        # Store result
+        if search_topic and notes:
+             try:
+                 supabase.table("lecture_notes").insert({
+                     "user_id": user_id,
+                     "topic": search_topic,
+                     "content": notes
+                 }).execute()
+             except Exception as e:
+                 logger.error(f"Failed to cache notes: {e}")
+
         return {"notes": notes}
     except Exception as e:
+        logger.error(f"Generate Notes Error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/generate-flashcards")
 async def generate_flashcards(
     content: str = Form(...),
     num_cards: int = Form(10),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase)
 ):
     """Generate flashcards from content"""
     try:
+        user_id = user.id
+        search_topic = content if len(content) < 200 else None
+        
+        if search_topic:
+             existing = supabase.table("ai_flashcards").select("*").eq("user_id", user_id).eq("topic", search_topic).execute()
+             if existing.data:
+                  logger.info(f"Returning cached flashcards for topic: {search_topic}")
+                  return {"flashcards": existing.data[0]['cards']}
+
         ai_service = get_ai_service()
         flashcards = await ai_service.generate_flashcards(content, num_cards)
+        
+        if search_topic and flashcards:
+             try:
+                 supabase.table("ai_flashcards").insert({
+                     "user_id": user_id,
+                     "topic": search_topic,
+                     "cards": flashcards
+                 }).execute()
+             except Exception as e:
+                 logger.error(f"Failed to cache flashcards: {e}")
+
         return {"flashcards": flashcards}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -74,12 +125,33 @@ async def generate_quiz(
     content: str = Form(...),
     num_questions: int = Form(10),
     question_type: str = Form("mixed"),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase)
 ):
     """Generate quiz questions from content"""
     try:
+        user_id = user.id
+        search_topic = content if len(content) < 200 else None
+        
+        if search_topic:
+             existing = supabase.table("ai_quizzes").select("*").eq("user_id", user_id).eq("topic", search_topic).execute()
+             if existing.data:
+                  logger.info(f"Returning cached quiz for topic: {search_topic}")
+                  return {"questions": existing.data[0]['questions']}
+
         ai_service = get_ai_service()
         quiz = await ai_service.generate_quiz(content, num_questions, question_type)
+        
+        if search_topic and quiz:
+             try:
+                 supabase.table("ai_quizzes").insert({
+                     "user_id": user_id,
+                     "topic": search_topic,
+                     "questions": quiz
+                 }).execute()
+             except Exception as e:
+                 logger.error(f"Failed to cache quiz: {e}")
+
         return {"questions": quiz}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -88,12 +160,35 @@ async def generate_quiz(
 async def generate_mindmap(
     content: str = Form(...),
     topic: Optional[str] = Form(None),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase)
 ):
     """Generate mind map structure from content"""
     try:
+        user_id = user.id
+        search_topic = topic
+        if not search_topic and len(content) < 200:
+             search_topic = content
+             
+        if search_topic:
+             existing = supabase.table("ai_mindmaps").select("*").eq("user_id", user_id).eq("topic", search_topic).execute()
+             if existing.data:
+                  logger.info(f"Returning cached mindmap for topic: {search_topic}")
+                  return {"mindmap": existing.data[0]['structure']}
+
         ai_service = get_ai_service()
         mindmap = await ai_service.generate_mind_map_structure(content, topic)
+        
+        if search_topic and mindmap:
+             try:
+                 supabase.table("ai_mindmaps").insert({
+                     "user_id": user_id,
+                     "topic": search_topic,
+                     "structure": mindmap
+                 }).execute()
+             except Exception as e:
+                 logger.error(f"Failed to cache mindmap: {e}")
+
         return {"mindmap": mindmap}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -119,33 +214,23 @@ async def process_pdf(
     topic: Optional[str] = Form(None),
     user: dict = Depends(get_current_user)
 ):
-    """Process PDF and generate short notes via text extraction"""
+    """
+    Process PDF and stream notes generation (Batched).
+    Returns an NDJSON stream.
+    """
     try:
-        logger.info(f"Processing PDF: {file.filename}")
+        logger.info(f"Processing PDF (Streaming): {file.filename}")
         ai_service = get_ai_service()
         pdf_bytes = await file.read()
         logger.debug(f"Read PDF bytes: {len(pdf_bytes)}")
         
-        # 1. Convert PDF Pages to Images
-        try:
-            # Returns List[str] (List of Base64 Data URIs)
-            pdf_images = ai_service.extract_images_from_pdf(pdf_bytes) 
-            logger.info(f"Successfully converted PDF to {len(pdf_images)} images")
-        except Exception as e:
-            logger.error(f"PDF Image conversion failed: {e}")
-            raise HTTPException(status_code=400, detail=f"Failed to process PDF images: {e}")
+        # Use Streaming Generator
+        # The generator handles image conversion and batching internally
+        return StreamingResponse(
+            ai_service.generate_notes_stream(pdf_bytes, topic),
+            media_type="application/x-ndjson"
+        )
 
-        # 2. Generate Notes from Images
-        notes = await ai_service.generate_short_notes(pdf_images, topic)
-        logger.info("Successfully generated notes from images")
-        
-        # Return response
-        return {
-            "notes": notes,
-            "text": f"PDF processed as {len(pdf_images)} images. (Visual analysis enabled)", 
-            "filename": file.filename,
-            "has_more": True 
-        }
     except Exception as e:
         logger.error(f"Process PDF failed: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=str(e))

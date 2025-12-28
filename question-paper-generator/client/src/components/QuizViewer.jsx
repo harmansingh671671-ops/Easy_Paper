@@ -1,60 +1,83 @@
 import { useState } from 'react';
-import { CheckCircle, XCircle, ArrowRight, RotateCcw } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight, RotateCcw, HelpCircle, CheckSquare, Loader } from 'lucide-react';
 
-function QuizViewer({ questions: initialQuestions }) {
+function QuizViewer({ questions: initialQuestions, onGenerateMore }) {
   const [questions, setQuestions] = useState(
-    initialQuestions.map((q, idx) => ({ ...q, id: idx, userAnswer: null, isAnswered: false }))
+    initialQuestions.map((q, idx) => ({
+      ...q,
+      id: idx,
+      userAnswer: null,
+      isAnswered: false, // This now means "Checked" 
+      showAnswer: false
+    }))
   );
+
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showResults, setShowResults] = useState(false);
-  const [score, setScore] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(null); // Temp state before "Check Answer"
+
+  // Sync state logic
+  if (initialQuestions.length > questions.length) {
+    const newQs = initialQuestions.slice(questions.length).map((q, idx) => ({
+      ...q,
+      id: questions.length + idx,
+      userAnswer: null,
+      isAnswered: false,
+      showAnswer: false
+    }));
+    setQuestions([...questions, ...newQs]);
+  }
 
   const currentQuestion = questions[currentIndex];
 
-  const handleAnswer = (answer) => {
+  // 1. Select Logic (Doesn't validate yet)
+  const handleSelect = (answer) => {
+    if (questions[currentIndex].isAnswered) return;
+    setSelectedOption(answer);
+  };
+
+  const handleDoubleClick = (answer) => {
+    if (questions[currentIndex].isAnswered) return;
+    setSelectedOption(answer);
+    // Immediate submission
     const updatedQuestions = [...questions];
     updatedQuestions[currentIndex].userAnswer = answer;
     updatedQuestions[currentIndex].isAnswered = true;
+    updatedQuestions[currentIndex].isCorrect = checkCorrectness(updatedQuestions[currentIndex], answer);
+    updatedQuestions[currentIndex].showAnswer = true; // Also show explanation
     setQuestions(updatedQuestions);
+  };
+
+  // 2. Check Answer Logic (Validates and locks)
+  const handleCheckAnswer = () => {
+    if (!selectedOption) return;
+
+    const updatedQuestions = [...questions];
+    updatedQuestions[currentIndex].userAnswer = selectedOption;
+    updatedQuestions[currentIndex].isAnswered = true;
+    updatedQuestions[currentIndex].isCorrect = checkCorrectness(updatedQuestions[currentIndex], selectedOption);
+
+    setQuestions(updatedQuestions);
+  };
+
+  const checkCorrectness = (q, answer) => {
+    if (q.question_type === 'MCQ') {
+      return answer === q.correct_answer;
+    }
+    return answer?.toLowerCase().trim() === q.correct_answer?.toLowerCase().trim();
   };
 
   const handleNext = () => {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
-    } else {
-      calculateScore();
-      setShowResults(true);
+      setSelectedOption(null); // Reset selection for next
     }
   };
 
-  const calculateScore = () => {
-    let correct = 0;
-    questions.forEach((q) => {
-      if (q.question_type === 'MCQ') {
-        if (q.userAnswer === q.correct_answer || q.userAnswer === q.correct_answer?.toUpperCase()) {
-          correct++;
-        }
-      } else if (q.question_type === 'TRUE_FALSE') {
-        if (q.userAnswer?.toLowerCase() === q.correct_answer?.toLowerCase()) {
-          correct++;
-        }
-      } else {
-        // FILL_BLANK or other types
-        if (q.userAnswer?.toLowerCase().trim() === q.correct_answer?.toLowerCase().trim()) {
-          correct++;
-        }
-      }
-    });
-    setScore(correct);
-  };
-
-  const handleReset = () => {
-    setQuestions(
-      initialQuestions.map((q, idx) => ({ ...q, id: idx, userAnswer: null, isAnswered: false }))
-    );
-    setCurrentIndex(0);
-    setShowResults(false);
-    setScore(0);
+  const handleShowAnswer = () => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[currentIndex].showAnswer = true;
+    setQuestions(updatedQuestions);
   };
 
   const getDifficultyColor = (difficulty) => {
@@ -66,60 +89,16 @@ function QuizViewer({ questions: initialQuestions }) {
     }
   };
 
-  if (showResults) {
-    const percentage = Math.round((score / questions.length) * 100);
-    return (
-      <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Quiz Results</h2>
-        <div className="text-6xl font-bold text-indigo-600 mb-2">
-          {score}/{questions.length}
-        </div>
-        <div className="text-2xl text-gray-600 mb-6">{percentage}%</div>
-        
-        <div className="space-y-4 mt-8 text-left">
-          {questions.map((q, idx) => {
-            const isCorrect = 
-              (q.question_type === 'MCQ' && q.userAnswer === q.correct_answer) ||
-              (q.question_type !== 'MCQ' && q.userAnswer?.toLowerCase().trim() === q.correct_answer?.toLowerCase().trim());
-            
-            return (
-              <div key={idx} className={`p-4 rounded-lg border-2 ${isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-                <div className="flex items-start gap-2 mb-2">
-                  {isCorrect ? (
-                    <CheckCircle className="text-green-600 mt-1" size={20} />
-                  ) : (
-                    <XCircle className="text-red-600 mt-1" size={20} />
-                  )}
-                  <p className="font-semibold">{q.question_text}</p>
-                </div>
-                <div className="ml-7 space-y-1 text-sm">
-                  <p className="text-gray-600">Your answer: <span className="font-medium">{q.userAnswer || 'Not answered'}</span></p>
-                  {!isCorrect && (
-                    <p className="text-gray-600">Correct answer: <span className="font-medium text-green-700">{q.correct_answer}</span></p>
-                  )}
-                  {q.explanation && (
-                    <p className="text-gray-500 italic">{q.explanation}</p>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <button
-          onClick={handleReset}
-          className="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 mx-auto"
-        >
-          <RotateCcw size={20} />
-          Retake Quiz
-        </button>
-      </div>
-    );
-  }
+  const handleGenerateMoreClick = async () => {
+    if (!onGenerateMore) return;
+    setLoadingMore(true);
+    await onGenerateMore();
+    setLoadingMore(false);
+  };
 
   return (
     <div className="space-y-4">
-      {/* Progress */}
+      {/* Progress & Difficulty */}
       <div className="bg-white rounded-lg shadow-sm p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-700">
@@ -137,99 +116,171 @@ function QuizViewer({ questions: initialQuestions }) {
         </div>
       </div>
 
-      {/* Question */}
+      {/* Question Card */}
       <div className="bg-white rounded-lg shadow-sm p-6">
         <p className="text-xl font-semibold text-gray-900 mb-6">
           {currentQuestion.question_text}
         </p>
 
-        {/* MCQ Options */}
+        {/* Options */}
         {currentQuestion.question_type === 'MCQ' && currentQuestion.options && (
           <div className="space-y-3">
-            {currentQuestion.options.map((option, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleAnswer(option)}
-                disabled={currentQuestion.isAnswered}
-                className={`w-full text-left p-4 rounded-lg border-2 transition-colors ${
-                  currentQuestion.userAnswer === option
-                    ? 'border-indigo-600 bg-indigo-50'
-                    : 'border-gray-200 hover:border-indigo-300'
-                } ${currentQuestion.isAnswered ? 'cursor-default' : 'cursor-pointer'}`}
-              >
-                {String.fromCharCode(65 + idx)}. {option}
-              </button>
-            ))}
+            {currentQuestion.options.map((option, idx) => {
+              let optionClass = "border-gray-200 hover:border-indigo-300";
+
+              // Display Logic
+              if (currentQuestion.isAnswered) {
+                // Locked State
+                if (option === currentQuestion.correct_answer) {
+                  optionClass = "border-green-500 bg-green-50"; // Always highlight correct
+                } else if (option === currentQuestion.userAnswer) {
+                  optionClass = "border-red-500 bg-red-50"; // Highlight wrong if selected
+                } else {
+                  optionClass = "border-gray-200 opacity-60"; // Fade others
+                }
+              } else {
+                // Selection State
+                if (option === selectedOption) {
+                  optionClass = "border-indigo-600 bg-indigo-50 shadow-md";
+                }
+              }
+
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleSelect(option)}
+                  onDoubleClick={() => handleDoubleClick(option)}
+                  disabled={currentQuestion.isAnswered}
+                  className={`w-full text-left p-4 rounded-lg border-2 transition-all ${optionClass} ${currentQuestion.isAnswered ? 'cursor-default' : 'cursor-pointer'}`}
+                >
+                  {String.fromCharCode(65 + idx)}. {option}
+                  {currentQuestion.isAnswered && option === currentQuestion.correct_answer && (
+                    <CheckCircle className="inline ml-2 text-green-600" size={16} />
+                  )}
+                  {currentQuestion.isAnswered && option === currentQuestion.userAnswer && option !== currentQuestion.correct_answer && (
+                    <XCircle className="inline ml-2 text-red-600" size={16} />
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
 
-        {/* TRUE_FALSE Options */}
+        {/* True/False */}
         {currentQuestion.question_type === 'TRUE_FALSE' && (
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => handleAnswer('True')}
-              disabled={currentQuestion.isAnswered}
-              className={`p-4 rounded-lg border-2 transition-colors ${
-                currentQuestion.userAnswer === 'True'
-                  ? 'border-indigo-600 bg-indigo-50'
-                  : 'border-gray-200 hover:border-indigo-300'
-              } ${currentQuestion.isAnswered ? 'cursor-default' : 'cursor-pointer'}`}
-            >
-              True
-            </button>
-            <button
-              onClick={() => handleAnswer('False')}
-              disabled={currentQuestion.isAnswered}
-              className={`p-4 rounded-lg border-2 transition-colors ${
-                currentQuestion.userAnswer === 'False'
-                  ? 'border-indigo-600 bg-indigo-50'
-                  : 'border-gray-200 hover:border-indigo-300'
-              } ${currentQuestion.isAnswered ? 'cursor-default' : 'cursor-pointer'}`}
-            >
-              False
-            </button>
+          <div className="mt-4 flex gap-4">
+            {['True', 'False'].map(opt => {
+              let btnClass = "border-gray-200 hover:border-indigo-500";
+              if (currentQuestion.isAnswered) {
+                if (opt === currentQuestion.correct_answer) btnClass = "border-green-500 bg-green-50";
+                else if (opt === currentQuestion.userAnswer) btnClass = "border-red-500 bg-red-50";
+                else btnClass = "border-gray-200 opacity-60";
+              } else if (selectedOption === opt) {
+                btnClass = "border-indigo-600 bg-indigo-50 shadow-md";
+              }
+
+              return (
+                <button
+                  key={opt}
+                  onClick={() => handleSelect(opt)}
+                  disabled={currentQuestion.isAnswered}
+                  className={`px-8 py-3 rounded-lg border-2 font-medium transition-all ${btnClass}`}
+                >
+                  {opt}
+                </button>
+              );
+            })}
           </div>
         )}
 
-        {/* FILL_BLANK Input */}
+        {/* Input Box */}
         {currentQuestion.question_type === 'FILL_BLANK' && (
-          <input
-            type="text"
-            value={currentQuestion.userAnswer || ''}
-            onChange={(e) => handleAnswer(e.target.value)}
-            disabled={currentQuestion.isAnswered}
-            placeholder="Enter your answer"
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-          />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              disabled={currentQuestion.isAnswered}
+              value={selectedOption || ''}
+              onChange={(e) => handleSelect(e.target.value)}
+              className="border-2 p-3 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+              placeholder="Type your answer here..."
+            />
+          </div>
         )}
+
+        {/* Action Bar: Check Answer -> Show Explanation */}
+        <div className="mt-6 flex items-center justify-between">
+          {!currentQuestion.isAnswered ? (
+            <button
+              onClick={handleCheckAnswer}
+              disabled={!selectedOption}
+              className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition-colors ${selectedOption
+                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+            >
+              <CheckSquare size={18} />
+              Check Answer
+            </button>
+          ) : (
+            <div className="flex flex-col gap-4 w-full">
+              {/* Feedback Message */}
+              <div className={`p-3 rounded-lg text-sm font-medium ${currentQuestion.isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {currentQuestion.isCorrect ? "Correct! Well done." : "Incorrect. Don't worry, keep trying!"}
+              </div>
+
+              {!currentQuestion.showAnswer ? (
+                <button
+                  onClick={handleShowAnswer}
+                  className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-100 flex items-center gap-2 w-fit"
+                >
+                  <HelpCircle size={16} />
+                  Show Explanation
+                </button>
+              ) : (
+                <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-900 border border-blue-100 animate-in fade-in zoom-in-95 duration-200">
+                  <p className="font-bold mb-1">Answer: {currentQuestion.correct_answer}</p>
+                  <p>{currentQuestion.explanation}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
       </div>
 
-      {/* Next Button */}
-      {currentQuestion.isAnswered && (
-        <button
-          onClick={handleNext}
-          className="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 font-semibold"
-        >
-          {currentIndex < questions.length - 1 ? (
-            <>
-              Next Question
-              <ArrowRight size={20} />
-            </>
-          ) : (
-            'View Results'
-          )}
-        </button>
-      )}
+      {/* Footer / Navigation */}
+      <div className="flex gap-4 mt-6">
+        {onGenerateMore && (
+          <button
+            onClick={handleGenerateMoreClick}
+            disabled={loadingMore}
+            className="px-4 py-2 text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-2 text-sm font-medium"
+          >
+            {loadingMore ? <Loader className="animate-spin" size={16} /> : <RotateCcw size={16} />}
+            Generate More Questions
+          </button>
+        )}
+
+        <div className="flex-1" />
+
+        {/* Next Button - Always available if checked */}
+        {currentQuestion.isAnswered && currentIndex < questions.length - 1 && (
+          <button
+            onClick={handleNext}
+            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm font-medium"
+          >
+            Next Question <ArrowRight size={18} />
+          </button>
+        )}
+
+        {currentIndex === questions.length - 1 && currentQuestion.isAnswered && (
+          <div className="text-gray-500 text-sm py-2 italic">
+            End of questions
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 export default QuizViewer;
-
-
-
-
-
-
-
-

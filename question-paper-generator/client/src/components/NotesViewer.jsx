@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FileText, Download, Copy, Check } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 function NotesViewer({ notes, title = 'Short Notes' }) {
   const [copied, setCopied] = useState(false);
@@ -26,6 +27,8 @@ function NotesViewer({ notes, title = 'Short Notes' }) {
     URL.revokeObjectURL(url);
   };
 
+
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
@@ -50,11 +53,9 @@ function NotesViewer({ notes, title = 'Short Notes' }) {
           </button>
         </div>
       </div>
-      
-      <div className="prose max-w-none">
-        <pre className="whitespace-pre-wrap text-gray-700 font-sans bg-gray-50 p-4 rounded-lg border border-gray-200">
-          {notes}
-        </pre>
+
+      <div className="prose max-w-none prose-indigo">
+        <ReactMarkdown>{notes}</ReactMarkdown>
       </div>
     </div>
   );

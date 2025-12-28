@@ -14237,3 +14237,141 @@ Exception: Failed to generate content after exhausting all retry attempts.
 2025-12-28 09:55:02,196 - INFO - Converted PDF to 2 images
 2025-12-28 09:55:02,704 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
 2025-12-28 09:56:57,887 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 11:35:11,750 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-28 11:35:15,624 - INFO - Converted PDF to 20 images
+2025-12-28 11:35:16,102 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 11:35:20,656 - WARNING - Attempt 1 failed with key ...cc12: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:35:22,176 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-28 11:35:25,946 - WARNING - Attempt 2 failed with key ...a887: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:35:27,657 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...e332
+2025-12-28 11:35:31,339 - WARNING - Attempt 3 failed with key ...e332: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:35:32,833 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 11:35:36,971 - WARNING - Attempt 4 failed with key ...cc12: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:35:38,460 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-28 11:35:41,339 - WARNING - Attempt 5 failed with key ...a887: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:35:42,854 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...e332
+2025-12-28 11:35:46,800 - WARNING - Attempt 6 failed with key ...e332: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:35:47,790 - ERROR - Generate Notes Error: Failed to generate content after exhausting all retry attempts.
+Traceback (most recent call last):
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 144, in generate_short_notes
+    response_text = await self._generate_with_retry(content, prompt, "You are an expert educator. Return only valid JSON.")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 125, in _generate_with_retry
+    raise Exception("Failed to generate content after exhausting all retry attempts.")
+Exception: Failed to generate content after exhausting all retry attempts.
+2025-12-28 11:36:10,793 - INFO - Converted PDF to 2 images
+2025-12-28 11:36:11,317 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 11:36:12,403 - WARNING - Attempt 1 failed with key ...cc12: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:36:13,943 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-28 11:36:15,156 - WARNING - Attempt 2 failed with key ...a887: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:36:16,660 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...e332
+2025-12-28 11:36:17,698 - WARNING - Attempt 3 failed with key ...e332: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:36:19,233 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 11:36:20,148 - WARNING - Attempt 4 failed with key ...cc12: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:36:21,715 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-28 11:36:22,607 - WARNING - Attempt 5 failed with key ...a887: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:36:24,185 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...e332
+2025-12-28 11:36:25,096 - WARNING - Attempt 6 failed with key ...e332: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:36:26,097 - ERROR - Generate Notes Error: Failed to generate content after exhausting all retry attempts.
+Traceback (most recent call last):
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 144, in generate_short_notes
+    response_text = await self._generate_with_retry(content, prompt, "You are an expert educator. Return only valid JSON.")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 125, in _generate_with_retry
+    raise Exception("Failed to generate content after exhausting all retry attempts.")
+Exception: Failed to generate content after exhausting all retry attempts.
+2025-12-28 11:42:29,242 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-28 11:42:29,468 - INFO - Converted PDF to 2 images
+2025-12-28 11:42:29,995 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 11:42:31,831 - WARNING - Attempt 1 failed with key ...cc12: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:42:33,392 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-28 11:42:34,337 - WARNING - Attempt 2 failed with key ...a887: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:42:35,823 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...e332
+2025-12-28 11:42:36,805 - WARNING - Attempt 3 failed with key ...e332: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:42:38,246 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 11:42:38,667 - WARNING - Attempt 4 failed with key ...cc12: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:42:40,141 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-28 11:42:40,554 - WARNING - Attempt 5 failed with key ...a887: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:42:42,004 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...e332
+2025-12-28 11:42:42,652 - WARNING - Attempt 6 failed with key ...e332: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 11:42:43,638 - ERROR - Generate Notes Error: Failed to generate content after exhausting all retry attempts.
+Traceback (most recent call last):
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 144, in generate_short_notes
+    response_text = await self._generate_with_retry(content, prompt, "You are an expert educator. Return only valid JSON.")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 125, in _generate_with_retry
+    raise Exception("Failed to generate content after exhausting all retry attempts.")
+Exception: Failed to generate content after exhausting all retry attempts.
+2025-12-28 11:44:37,617 - INFO - Converted PDF to 20 images
+2025-12-28 11:44:38,085 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 11:44:42,986 - WARNING - Attempt 1 failed with key ...cc12: Error code: 400 - {'error': {'message': 'Provider returned error', 'code': 400, 'metadata': {'raw': '{"error":{"message":"At most 10 image(s) may be provided in one prompt. None","type":"BadRequestError","param":null,"code":400}}', 'provider_name': 'Nvidia'}}, 'user_id': 'user_37NhMBKxS2x2ppyAG303Z7QMckv'}
+2025-12-28 11:44:44,442 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-28 11:44:49,542 - WARNING - Attempt 2 failed with key ...a887: Error code: 400 - {'error': {'message': 'Provider returned error', 'code': 400, 'metadata': {'raw': '{"error":{"message":"At most 10 image(s) may be provided in one prompt. None","type":"BadRequestError","param":null,"code":400}}', 'provider_name': 'Nvidia'}}, 'user_id': 'user_37NhMBKxS2x2ppyAG303Z7QMckv'}
+2025-12-28 11:44:51,083 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...e332
+2025-12-28 12:17:33,610 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-28 12:17:33,830 - INFO - Converted PDF to 2 images
+2025-12-28 12:17:33,830 - INFO - Processing Batch 1/1 (2 pages)
+2025-12-28 12:17:34,284 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 12:17:49,352 - INFO - Converted PDF to 2 images
+2025-12-28 12:17:49,352 - INFO - Processing Batch 1/1 (2 pages)
+2025-12-28 12:17:49,842 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 12:18:03,157 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 12:18:14,888 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 12:24:14,866 - INFO - Converted PDF to 1 images
+2025-12-28 12:24:14,866 - INFO - Processing Batch 1/1 (1 pages)
+2025-12-28 12:24:15,460 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 12:24:38,215 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 12:55:48,726 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 12:57:09,965 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 12:57:28,213 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 12:57:41,634 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 12:58:32,351 - INFO - Converted PDF to 1 images
+2025-12-28 12:58:32,352 - INFO - Processing Batch 1/1 (1 pages)
+2025-12-28 12:58:32,809 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 12:59:31,409 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 13:00:02,529 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 13:03:00,873 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 13:13:28,036 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-28 13:13:28,252 - INFO - Converted PDF to 2 images
+2025-12-28 13:13:28,252 - INFO - Processing Batch 1/1 (2 pages)
+2025-12-28 13:13:28,710 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 13:13:53,145 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 13:14:51,743 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 13:15:43,847 - INFO - Converted PDF to 2 images
+2025-12-28 13:15:43,847 - INFO - Processing Batch 1/1 (2 pages)
+2025-12-28 13:15:44,309 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 13:16:11,102 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 13:16:38,259 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 13:17:23,703 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 14:05:04,942 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-28 14:05:05,160 - INFO - Converted PDF to 2 images
+2025-12-28 14:05:05,160 - INFO - Processing Batch 1/1 (2 pages)
+2025-12-28 14:05:05,648 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 14:05:37,840 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 14:06:11,456 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 14:09:05,551 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 14:31:25,120 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-28 14:31:25,586 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 14:31:26,987 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 16:16:45,717 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-28 16:16:45,944 - INFO - Converted PDF to 2 images
+2025-12-28 16:16:45,944 - INFO - Processing Batch 1/1 (2 pages)
+2025-12-28 16:16:46,416 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 16:28:16,229 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-28 16:28:16,454 - INFO - Converted PDF to 2 images
+2025-12-28 16:28:16,455 - INFO - Processing Batch 1/1 (2 pages)
+2025-12-28 16:28:16,992 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 16:30:53,836 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-28 16:30:54,062 - INFO - Converted PDF to 2 images
+2025-12-28 16:30:54,062 - INFO - Processing Batch 1/1 (2 pages)
+2025-12-28 16:30:54,523 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 16:31:09,221 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 16:32:13,389 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 16:32:54,602 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 16:34:38,852 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 16:47:20,634 - INFO - Converted PDF to 2 images
+2025-12-28 16:47:20,635 - INFO - Processing Batch 1/1 (2 pages)
+2025-12-28 16:47:21,092 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 16:47:42,580 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 16:48:41,761 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 16:50:05,689 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12

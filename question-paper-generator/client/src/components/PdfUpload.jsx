@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { Upload, FileText, Loader, CheckCircle, X } from 'lucide-react';
 import aiService from '../services/aiService';
 
-function PdfUpload({ onProcessed, topic: initialTopic = '' }) {
+function PdfUpload({ onProcessed, onStatusChange, topic: initialTopic = '' }) {
   const [file, setFile] = useState(null);
   const [topic, setTopic] = useState(initialTopic);
   const [loading, setLoading] = useState(false);
@@ -47,53 +47,91 @@ function PdfUpload({ onProcessed, topic: initialTopic = '' }) {
 
     setLoading(true);
     setError('');
-    setResult(null);
+    setResult({ notes: '' }); // Initialize with empty notes for streaming
+
+    let accumulatedNotes = '';
 
     try {
-      // Step 1: Process PDF and get notes (fastest - shown immediately)
-      const data = await aiService.processPdf(file, topic || undefined);
+      // Step 1: Process PDF with Streaming
+      if (onStatusChange) onStatusChange('notes', true);
 
-      // Show notes immediately
-      const initialResult = { notes: data.notes, filename: data.filename };
-      setResult(initialResult);
-      if (onProcessed) {
-        onProcessed(initialResult);
-      }
+      await aiService.processPdf(file, topic || undefined, (data) => {
+        if (data.notes) {
+          accumulatedNotes += data.notes + '\n\n';
+          setResult(prev => ({
+            ...prev,
+            notes: accumulatedNotes,
+            filename: file.name,
+            status: data.batch ? `Analyzing Batch ${data.batch}/${data.total_batches}...` : 'Processing...'
+          }));
+        }
+      });
 
-      setLoading(false); // User sees notes now
+      setLoading(false); // Stream done
+      if (onStatusChange) onStatusChange('notes', false);
+
+      // Prepare the master data object to send to parent
+      const finalResult = {
+        notes: accumulatedNotes,
+        filename: file.name,
+        quiz: null,
+        mindmap: null,
+        flashcards: null
+      };
+
+      // Notify parent immediately about valid notes
+      if (onProcessed) onProcessed({ ...finalResult });
 
       // Step 2: Queue other features sequentially to reduce API load
-      const contextForNext = data.text || data.notes;
+      const contextForNext = accumulatedNotes;
 
       // Sequence: Notes (Done) -> Quiz -> Mind Map -> Flashcards
       try {
         // 1. Generate Quiz
+        if (onStatusChange) onStatusChange('quizzes', true);
         console.log("Starting Quiz Generation...");
         const quizRes = await aiService.generateQuiz(contextForNext, 10, 'mixed');
         setResult(prev => ({ ...prev, quiz: quizRes.questions }));
-        if (onProcessed) onProcessed(prev => ({ ...prev, quiz: quizRes.questions }));
+        if (onStatusChange) onStatusChange('quizzes', false);
+
+        finalResult.quiz = quizRes.questions;
+        if (onProcessed) onProcessed({ ...finalResult });
 
         // 2. Generate Mind Map
+        if (onStatusChange) onStatusChange('mindmaps', true);
         console.log("Starting Mind Map Generation...");
         const mmRes = await aiService.generateMindMap(contextForNext, topic || undefined);
         setResult(prev => ({ ...prev, mindmap: mmRes.mindmap }));
-        if (onProcessed) onProcessed(prev => ({ ...prev, mindmap: mmRes.mindmap }));
+        if (onStatusChange) onStatusChange('mindmaps', false);
+
+        finalResult.mindmap = mmRes.mindmap;
+        if (onProcessed) onProcessed({ ...finalResult });
 
         // 3. Generate Flashcards
         console.log("Starting Flashcard Generation...");
         const fcRes = await aiService.generateFlashcards(contextForNext, 10);
         setResult(prev => ({ ...prev, flashcards: fcRes.flashcards }));
-        if (onProcessed) onProcessed(prev => ({ ...prev, flashcards: fcRes.flashcards }));
+
+        finalResult.flashcards = fcRes.flashcards;
+        if (onProcessed) onProcessed({ ...finalResult });
 
       } catch (seqError) {
         console.error("Sequential generation error:", seqError);
-        // Don't block UI if one fails, but maybe show partial success?
-        // Current error handler at outer level catches this. 
-        // We might want to just log it and let the user see what finished.
+        if (onStatusChange) {
+          onStatusChange('quizzes', false);
+          onStatusChange('mindmaps', false);
+        }
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to process PDF. Please try again.');
+      console.error(err);
+      setError(err.message || 'Failed to process PDF. Please try again.');
+      setResult(null); // Reset result so user can try again
       setLoading(false);
+      if (onStatusChange) {
+        onStatusChange('notes', false);
+        onStatusChange('quizzes', false);
+        onStatusChange('mindmaps', false);
+      }
     }
   };
 
@@ -186,16 +224,24 @@ function PdfUpload({ onProcessed, topic: initialTopic = '' }) {
 
       {/* Result Summary */}
       {result && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div className={`p-4 rounded-lg ${loading ? 'bg-blue-50 border-blue-200' : 'bg-green-50 border-green-200 border'}`}>
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle className="text-green-600" size={20} />
-            <span className="font-semibold text-green-900">Processing Complete!</span>
+            {loading ? (
+              <Loader className="animate-spin text-blue-600" size={20} />
+            ) : (
+              <CheckCircle className="text-green-600" size={20} />
+            )}
+            <span className={`font-semibold ${loading ? 'text-blue-900' : 'text-green-900'}`}>
+              {loading ? (result.status || 'Processing...') : 'Processing Complete!'}
+            </span>
           </div>
-          <div className="text-sm text-green-700 space-y-1">
-            {result.notes && <p>✓ Short notes generated</p>}
-            {result.flashcards && <p>✓ {result.flashcards.length} flashcards created</p>}
-            {result.quiz && <p>✓ {result.quiz.length} quiz questions generated</p>}
-            {result.mindmap && <p>✓ Mind map structure created</p>}
+          <div className="text-sm text-gray-700 space-y-1">
+            {/* Show accumulated notes count or status */}
+            {result.notes && <p>✓ Short notes generated ({(result.notes.length / 100).toFixed(0)}% approx)</p>}
+            {/* Only show these if fully done/populated */}
+            {!loading && result.flashcards && <p>✓ {result.flashcards.length} flashcards created</p>}
+            {!loading && result.quiz && <p>✓ {result.quiz.length} quiz questions generated</p>}
+            {!loading && result.mindmap && <p>✓ Mind map structure created</p>}
           </div>
         </div>
       )}
@@ -204,6 +250,3 @@ function PdfUpload({ onProcessed, topic: initialTopic = '' }) {
 }
 
 export default PdfUpload;
-
-
-
