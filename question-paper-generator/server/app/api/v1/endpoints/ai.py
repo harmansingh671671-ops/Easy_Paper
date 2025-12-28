@@ -126,22 +126,23 @@ async def process_pdf(
         pdf_bytes = await file.read()
         logger.debug(f"Read PDF bytes: {len(pdf_bytes)}")
         
-        # 1. Extract Text Locally
+        # 1. Convert PDF Pages to Images
         try:
-            text_content = ai_service.extract_text_from_pdf(pdf_bytes)
-            logger.info("Successfully extracted text from PDF")
+            # Returns List[str] (List of Base64 Data URIs)
+            pdf_images = ai_service.extract_images_from_pdf(pdf_bytes) 
+            logger.info(f"Successfully converted PDF to {len(pdf_images)} images")
         except Exception as e:
-            logger.error(f"Text extraction failed: {e}")
-            raise HTTPException(status_code=400, detail=f"Failed to extract text from PDF: {e}")
+            logger.error(f"PDF Image conversion failed: {e}")
+            raise HTTPException(status_code=400, detail=f"Failed to process PDF images: {e}")
 
-        # 2. Generate Notes from Text
-        notes = await ai_service.generate_short_notes(text_content, topic)
-        logger.info("Successfully generated notes from text")
+        # 2. Generate Notes from Images
+        notes = await ai_service.generate_short_notes(pdf_images, topic)
+        logger.info("Successfully generated notes from images")
         
         # Return response
         return {
             "notes": notes,
-            "text": text_content[:500] + "..." if len(text_content) > 500 else text_content, 
+            "text": f"PDF processed as {len(pdf_images)} images. (Visual analysis enabled)", 
             "filename": file.filename,
             "has_more": True 
         }

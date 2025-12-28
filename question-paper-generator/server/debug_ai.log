@@ -14165,3 +14165,75 @@ Traceback (most recent call last):
     raise mapped_exc(message) from exc
 httpx.ConnectError: All connection attempts failed
 2025-12-27 20:08:53,796 - ERROR - Failed to generate notes: Failed to generate content: All connection attempts failed
+2025-12-28 09:00:31,918 - INFO - AI Service Initialized with Model: xiaomi/mimo-v2-flash:free (Multimodal Mode)
+2025-12-28 09:00:32,478 - DEBUG - Sending request to xiaomi/mimo-v2-flash:free with key ...65b5
+2025-12-28 09:00:35,769 - WARNING - Attempt 1 failed with key ...65b5: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 09:00:37,263 - DEBUG - Sending request to xiaomi/mimo-v2-flash:free with key ...e383
+2025-12-28 09:00:37,814 - WARNING - Attempt 2 failed with key ...e383: Error code: 404 - {'error': {'message': 'No endpoints found that support image input', 'code': 404}}
+2025-12-28 09:00:39,282 - DEBUG - Sending request to xiaomi/mimo-v2-flash:free with key ...c71e
+2025-12-28 09:00:40,011 - WARNING - Attempt 3 failed with key ...c71e: Error code: 404 - {'error': {'message': 'No endpoints found that support image input', 'code': 404}}
+2025-12-28 09:00:41,578 - DEBUG - Sending request to xiaomi/mimo-v2-flash:free with key ...65b5
+2025-12-28 09:00:42,531 - WARNING - Attempt 4 failed with key ...65b5: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 09:00:44,073 - DEBUG - Sending request to xiaomi/mimo-v2-flash:free with key ...e383
+2025-12-28 09:00:44,574 - WARNING - Attempt 5 failed with key ...e383: Error code: 404 - {'error': {'message': 'No endpoints found that support image input', 'code': 404}}
+2025-12-28 09:00:46,061 - DEBUG - Sending request to xiaomi/mimo-v2-flash:free with key ...c71e
+2025-12-28 09:00:46,456 - WARNING - Attempt 6 failed with key ...c71e: Error code: 404 - {'error': {'message': 'No endpoints found that support image input', 'code': 404}}
+2025-12-28 09:00:47,449 - ERROR - Generate Notes Error: Failed to generate content after exhausting all retry attempts.
+Traceback (most recent call last):
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 119, in generate_short_notes
+    response_text = await self._generate_with_retry(text_content, prompt, "You are an expert educator. Return only valid JSON.")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 100, in _generate_with_retry
+    raise Exception("Failed to generate content after exhausting all retry attempts.")
+Exception: Failed to generate content after exhausting all retry attempts.
+2025-12-28 09:05:04,854 - INFO - AI Service Initialized with Model: xiaomi/mimo-v2-flash:free (Multimodal Mode)
+2025-12-28 09:05:05,458 - DEBUG - Sending request to xiaomi/mimo-v2-flash:free with key ...65b5
+2025-12-28 09:05:07,023 - WARNING - Attempt 1 failed with key ...65b5: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 09:05:08,587 - DEBUG - Sending request to xiaomi/mimo-v2-flash:free with key ...e383
+2025-12-28 09:05:09,174 - WARNING - Attempt 2 failed with key ...e383: Error code: 404 - {'error': {'message': 'No endpoints found that support image input', 'code': 404}}
+2025-12-28 09:05:10,636 - DEBUG - Sending request to xiaomi/mimo-v2-flash:free with key ...c71e
+2025-12-28 09:05:11,133 - WARNING - Attempt 3 failed with key ...c71e: Error code: 404 - {'error': {'message': 'No endpoints found that support image input', 'code': 404}}
+2025-12-28 09:05:12,597 - DEBUG - Sending request to xiaomi/mimo-v2-flash:free with key ...65b5
+2025-12-28 09:05:12,899 - WARNING - Attempt 4 failed with key ...65b5: Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}
+2025-12-28 09:05:14,325 - DEBUG - Sending request to xiaomi/mimo-v2-flash:free with key ...e383
+2025-12-28 09:05:15,112 - WARNING - Attempt 5 failed with key ...e383: Error code: 404 - {'error': {'message': 'No endpoints found that support image input', 'code': 404}}
+2025-12-28 09:05:16,558 - DEBUG - Sending request to xiaomi/mimo-v2-flash:free with key ...c71e
+2025-12-28 09:05:16,832 - WARNING - Attempt 6 failed with key ...c71e: Error code: 404 - {'error': {'message': 'No endpoints found that support image input', 'code': 404}}
+2025-12-28 09:05:17,820 - ERROR - Generate Notes Error: Failed to generate content after exhausting all retry attempts.
+Traceback (most recent call last):
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 121, in generate_short_notes
+    response_text = await self._generate_with_retry(text_content, prompt, "You are an expert educator. Return only valid JSON.")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 102, in _generate_with_retry
+    raise Exception("Failed to generate content after exhausting all retry attempts.")
+Exception: Failed to generate content after exhausting all retry attempts.
+2025-12-28 09:41:08,652 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Multimodal Mode)
+2025-12-28 09:41:09,120 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 09:41:12,339 - WARNING - Attempt 1 failed with key ...cc12: Error code: 400 - {'error': {'message': 'Provider returned error', 'code': 400, 'metadata': {'raw': '{"error":{"message":"cannot identify image file <_io.BytesIO object at 0x7f36d97bade0> cannot identify image file <_io.BytesIO object at 0x7f36d97bade0>","type":"BadRequestError","param":null,"code":400}}', 'provider_name': 'Nvidia'}}, 'user_id': 'user_37NhMBKxS2x2ppyAG303Z7QMckv'}
+2025-12-28 09:41:13,923 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-28 09:41:16,633 - WARNING - Attempt 2 failed with key ...a887: Error code: 400 - {'error': {'message': 'Provider returned error', 'code': 400, 'metadata': {'raw': '{"error":{"message":"cannot identify image file <_io.BytesIO object at 0x7f51103156c0> cannot identify image file <_io.BytesIO object at 0x7f51103156c0>","type":"BadRequestError","param":null,"code":400}}', 'provider_name': 'Nvidia'}}, 'user_id': 'user_37NhMBKxS2x2ppyAG303Z7QMckv'}
+2025-12-28 09:41:18,130 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...e332
+2025-12-28 09:41:19,734 - WARNING - Attempt 3 failed with key ...e332: Error code: 400 - {'error': {'message': 'Provider returned error', 'code': 400, 'metadata': {'raw': '{"error":{"message":"cannot identify image file <_io.BytesIO object at 0x7fe496d00180> cannot identify image file <_io.BytesIO object at 0x7fe496d00180>","type":"BadRequestError","param":null,"code":400}}', 'provider_name': 'Nvidia'}}, 'user_id': 'user_37NhMBKxS2x2ppyAG303Z7QMckv'}
+2025-12-28 09:41:21,199 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 09:41:22,464 - WARNING - Attempt 4 failed with key ...cc12: Error code: 400 - {'error': {'message': 'Provider returned error', 'code': 400, 'metadata': {'raw': '{"error":{"message":"cannot identify image file <_io.BytesIO object at 0x7fd8600dc1d0> cannot identify image file <_io.BytesIO object at 0x7fd8600dc1d0>","type":"BadRequestError","param":null,"code":400}}', 'provider_name': 'Nvidia'}}, 'user_id': 'user_37NhMBKxS2x2ppyAG303Z7QMckv'}
+2025-12-28 09:41:23,951 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-28 09:41:26,727 - WARNING - Attempt 5 failed with key ...a887: Error code: 400 - {'error': {'message': 'Provider returned error', 'code': 400, 'metadata': {'raw': '{"error":{"message":"cannot identify image file <_io.BytesIO object at 0x7fd3fe5e2f20> cannot identify image file <_io.BytesIO object at 0x7fd3fe5e2f20>","type":"BadRequestError","param":null,"code":400}}', 'provider_name': 'Nvidia'}}, 'user_id': 'user_37NhMBKxS2x2ppyAG303Z7QMckv'}
+2025-12-28 09:41:28,194 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...e332
+2025-12-28 09:41:29,673 - WARNING - Attempt 6 failed with key ...e332: Error code: 400 - {'error': {'message': 'Provider returned error', 'code': 400, 'metadata': {'raw': '{"error":{"message":"cannot identify image file <_io.BytesIO object at 0x7f900f1e3970> cannot identify image file <_io.BytesIO object at 0x7f900f1e3970>","type":"BadRequestError","param":null,"code":400}}', 'provider_name': 'Nvidia'}}, 'user_id': 'user_37NhMBKxS2x2ppyAG303Z7QMckv'}
+2025-12-28 09:41:30,674 - ERROR - Generate Notes Error: Failed to generate content after exhausting all retry attempts.
+Traceback (most recent call last):
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 121, in generate_short_notes
+    response_text = await self._generate_with_retry(text_content, prompt, "You are an expert educator. Return only valid JSON.")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 102, in _generate_with_retry
+    raise Exception("Failed to generate content after exhausting all retry attempts.")
+Exception: Failed to generate content after exhausting all retry attempts.
+2025-12-28 09:52:40,353 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-28 09:52:40,671 - INFO - Converted PDF to 2 images
+2025-12-28 09:52:41,269 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 09:54:08,256 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 09:54:32,335 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 09:54:52,691 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 09:55:02,196 - INFO - Converted PDF to 2 images
+2025-12-28 09:55:02,704 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 09:56:57,887 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
