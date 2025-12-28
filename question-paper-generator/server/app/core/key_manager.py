@@ -10,12 +10,7 @@ class KeyManager:
         self.key_status: Dict[str, float] = {k: 0.0 for k in self.keys}
         
         # Helper map to find key by nickname/index if needed, or by task
-        self.task_keys = {
-            "notes": os.getenv("1_GEMINI_API_KEY"),
-            "flashcards": os.getenv("2_GEMINI_API_KEY"),
-            "mindmap": os.getenv("3_GEMINI_API_KEY"),
-            "quiz": os.getenv("4_GEMINI_API_KEY"),
-        }
+        self.task_keys = {}
 
     def _ensure_env_loaded(self):
         """Manual fallback to load .env if load_dotenv failed"""
@@ -54,44 +49,13 @@ class KeyManager:
             print(f"DEBUG: Manual .env load failed: {e}")
 
     def _load_keys(self) -> List[str]:
-        keys = []
-        
-        # 0. Check for user-specified 'keys' variable (Edge case based on user comment)
-        # "i ahve written them in format as keys=1,2,3,4"
-        custom_keys = os.getenv("keys")
-        if custom_keys:
-            print(f"DEBUG: Found 'keys' env var: {custom_keys[:10]}...")
-            for k in custom_keys.split(","):
-                k = k.strip()
-                if k and k not in keys:
-                    keys.append(k)
-
-        # 1. Load comma-separated pool (High Priority)
-        # Support both GEMINI_API_KEYS and GEMINI_API_KEY (if it contains commas)
-        env_vars = ["GEMINI_API_KEYS", "GEMINI_API_KEY"]
-        
-        for var_name in env_vars:
-            val = os.getenv(var_name)
-            if val:
-                # If it looks like a list (contains comma), split it
-                if "," in val:
-                    print(f"DEBUG: Loading multiple keys from {var_name}")
-                    for k in val.split(","):
-                        k = k.strip()
-                        if k and k not in keys:
-                            keys.append(k)
-                # Otherwise, if it's a single key and not already added
-                elif val.strip() and val.strip() not in keys:
-                    print(f"DEBUG: Loading single key from {var_name}")
-                    keys.append(val.strip())
-        
-        # 2. Load numbered task keys (Legacy/Auxiliary)
-        for i in range(1, 5):
-            k = os.getenv(f"{i}_GEMINI_API_KEY")
-            if k and k not in keys:
-                keys.append(k)
-            
-        print(f"DEBUG: KeyManager loaded {len(keys)} unique keys.")
+        # User provided OpenRouter keys
+        keys = [
+            "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",
+            "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",
+            "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"
+        ]
+        print(f"DEBUG: KeyManager loaded {len(keys)} OpenRouter keys.")
         return keys
 
     def get_valid_key(self, task_type: str = None) -> str:

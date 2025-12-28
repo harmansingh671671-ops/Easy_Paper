@@ -119,46 +119,29 @@ async def process_pdf(
     topic: Optional[str] = Form(None),
     user: dict = Depends(get_current_user)
 ):
-    """Process PDF and generate short notes only (other features queued from frontend)"""
+    """Process PDF and generate short notes via text extraction"""
     try:
         logger.info(f"Processing PDF: {file.filename}")
         ai_service = get_ai_service()
         pdf_bytes = await file.read()
         logger.debug(f"Read PDF bytes: {len(pdf_bytes)}")
         
-        # 1. Save upload to temp file
-        import tempfile
-        import pathlib
-        
-        # Create temp file with .pdf extension
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-            tmp.write(pdf_bytes)
-            tmp_path = tmp.name
-            
-        logger.info(f"Saved temp PDF to {tmp_path}")
-        
+        # 1. Extract Text Locally
         try:
-            # 2. Upload to Gemini (Multimodal)
-            uploaded_file = await ai_service.upload_file(tmp_path)
-            logger.info("Successfully uploaded PDF to Gemini")
-            
-            # 3. Generate Notes from File
-            notes = await ai_service.generate_short_notes(uploaded_file, topic)
-            logger.info("Successfully generated notes from PDF")
-            
-            # Clean up temp file
-            os.unlink(tmp_path)
-            
+            text_content = ai_service.extract_text_from_pdf(pdf_bytes)
+            logger.info("Successfully extracted text from PDF")
         except Exception as e:
-            # Try to cleanup if failed
-            if os.path.exists(tmp_path):
-                os.unlink(tmp_path)
-            raise e
+            logger.error(f"Text extraction failed: {e}")
+            raise HTTPException(status_code=400, detail=f"Failed to extract text from PDF: {e}")
+
+        # 2. Generate Notes from Text
+        notes = await ai_service.generate_short_notes(text_content, topic)
+        logger.info("Successfully generated notes from text")
         
         # Return response
         return {
             "notes": notes,
-            "text": "(Processed as File directly - Text not extracted locally)", 
+            "text": text_content[:500] + "..." if len(text_content) > 500 else text_content, 
             "filename": file.filename,
             "has_more": True 
         }

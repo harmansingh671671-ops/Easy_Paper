@@ -14043,3 +14043,125 @@ Traceback (most recent call last):
     logger.error(f"Sticky Key Fatal Error: {e}")
 Exception: Sticky Key: Max retries exceeded (Quota stuck).
 2025-12-27 16:26:27,350 - ERROR - Failed to generate notes: Failed to generate content: Sticky Key: Max retries exceeded (Quota stuck).
+2025-12-27 19:47:49,045 - INFO - Starting upload...
+2025-12-27 19:47:52,462 - INFO - Upload initiated: files/hkh6533g0mcn. Waiting for processing...
+2025-12-27 19:47:52,753 - INFO - File is ACTIVE and ready.
+2025-12-27 19:47:52,754 - INFO - Using Sticky Key for file generation.
+2025-12-27 19:57:27,023 - ERROR - Failed to generate content: Sticky Key: Max retries exceeded (Quota stuck).
+Traceback (most recent call last):
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 245, in _generate_text
+    except Exception as e:
+                   ^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 108, in _generate_content_with_retry
+    pdf_file = io.BytesIO(pdf_bytes)
+Exception: Sticky Key: Max retries exceeded (Quota stuck).
+2025-12-27 19:57:27,024 - ERROR - Failed to generate notes: Failed to generate content: Sticky Key: Max retries exceeded (Quota stuck).
+2025-12-27 20:06:15,178 - INFO - Starting upload...
+2025-12-27 20:06:17,971 - INFO - Upload initiated: files/on8u48ule3dj. Waiting for processing...
+2025-12-27 20:06:18,691 - INFO - File is ACTIVE and ready.
+2025-12-27 20:06:18,691 - INFO - Using Sticky Key for file generation.
+2025-12-27 20:08:53,792 - ERROR - Sticky Key Fatal Error: All connection attempts failed
+2025-12-27 20:08:53,792 - ERROR - Failed to generate content: All connection attempts failed
+Traceback (most recent call last):
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpx\_transports\default.py", line 394, in handle_async_request
+    resp = await self._pool.handle_async_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpcore\_async\connection_pool.py", line 256, in handle_async_request
+    raise exc from None
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpcore\_async\connection_pool.py", line 236, in handle_async_request
+    response = await connection.handle_async_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpcore\_async\connection.py", line 101, in handle_async_request
+    raise exc
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpcore\_async\connection.py", line 78, in handle_async_request
+    stream = await self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpcore\_async\connection.py", line 124, in _connect
+    stream = await self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpcore\_backends\auto.py", line 31, in connect_tcp
+    return await self._backend.connect_tcp(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpcore\_backends\anyio.py", line 113, in connect_tcp
+    with map_exceptions(exc_map):
+  File "C:\Users\harma\AppData\Local\Programs\Python\Python311\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectError: All connection attempts failed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 245, in _generate_text
+    except Exception as e:
+                   ^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 106, in _generate_content_with_retry
+    def extract_pages_from_pdf(self, pdf_bytes: bytes) -> List[str]:
+                        ^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 84, in _generate_content_with_retry
+    # response_format=response_format # Disable strict JSON for Xiaomi Free model
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\google\genai\models.py", line 7018, in generate_content
+    response = await self._generate_content(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\google\genai\models.py", line 5824, in _generate_content
+    response = await self._api_client.async_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\google\genai\_api_client.py", line 1434, in async_request
+    result = await self._async_request(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\google\genai\_api_client.py", line 1367, in _async_request
+    return await self._async_retry(  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 111, in __call__
+    do = await self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 153, in iter
+    result = await action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\tenacity\_utils.py", line 99, in inner
+    return call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\tenacity\__init__.py", line 420, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\tenacity\__init__.py", line 187, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\harma\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\harma\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 114, in __call__
+    result = await fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\google\genai\_api_client.py", line 1340, in _async_request_once
+    client_response = await self._async_httpx_client.request(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpx\_client.py", line 1540, in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpx\_client.py", line 1629, in send
+    response = await self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpx\_client.py", line 1657, in _send_handling_auth
+    response = await self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpx\_client.py", line 1694, in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpx\_client.py", line 1730, in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpx\_transports\default.py", line 393, in handle_async_request
+    with map_httpcore_exceptions():
+  File "C:\Users\harma\AppData\Local\Programs\Python\Python311\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\venv\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: All connection attempts failed
+2025-12-27 20:08:53,796 - ERROR - Failed to generate notes: Failed to generate content: All connection attempts failed
