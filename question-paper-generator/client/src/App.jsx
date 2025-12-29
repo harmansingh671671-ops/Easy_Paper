@@ -7,7 +7,7 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import Onboarding from './pages/Onboarding';
 import LoadingSpinner from './components/LoadingSpinner';
 import SignIn from './pages/SignIn';
-import SignUp from './pages/SignUp';
+import Signup from './pages/Signup';
 import api from './services/api';
 
 // Profile Context to store user role and category
