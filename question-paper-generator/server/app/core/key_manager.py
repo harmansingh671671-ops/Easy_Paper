@@ -23,15 +23,40 @@ class KeyManager:
         self._check_and_reload_keys()
 
     def _check_and_reload_keys(self):
-        """Checks if the key file has changed and reloads keys if so."""
+        """Checks env vars -> custom file path -> local dev file -> keeps defaults"""
         try:
+            # 1. Environment Variable (Comma Separated)
+            env_keys_str = os.getenv("OPENROUTER_API_KEYS")
+            if env_keys_str:
+                env_keys = [k.strip() for k in env_keys_str.split(',') if k.strip()]
+                if env_keys:
+                    self.keys = env_keys
+                    logger.info("Loaded keys from OPENROUTER_API_KEYS env var")
+                    return
+
+            # 2. Custom File Path (e.g., Render Secret File)
+            # User sets KEYS_FILE_PATH=/etc/secrets/my_keys.txt
+            custom_path = os.getenv("KEYS_FILE_PATH")
+            if custom_path and os.path.exists(custom_path):
+                try:
+                    with open(custom_path, 'r', encoding='utf-8') as f:
+                        lines = [line.strip() for line in f.readlines()]
+                        new_keys = [k for k in lines if k and k.startswith('sk-')]
+                        if new_keys:
+                            self.keys = new_keys
+                            logger.info(f"Loaded {len(self.keys)} keys from file: {custom_path}")
+                            return
+                except Exception as e:
+                    logger.error(f"Failed to read custom key file: {e}")
+
+            # 3. Local Development File Check
             if not os.path.exists(self.key_file_path):
                 return # Keep defaults if file missing
 
             current_mtime = os.path.getmtime(self.key_file_path)
             if current_mtime > self.last_mtime:
                 # File modified, reload
-                logger.debug("Key file modification detected. Reloading keys...")
+                logger.debug("Local key file modification detected. Reloading keys...")
                 with open(self.key_file_path, 'r', encoding='utf-8') as f:
                     lines = [line.strip() for line in f.readlines()]
                     # Filter valid keys (non-empty, start with 'sk-')

@@ -12,7 +12,7 @@ services:
         value: "true"
       - key: ALLOW_ORIGINS
         sync: false # User must update this after deploying frontend
-      - key: GEMINI_API_KEYS
+      - key: OPENROUTER_API_KEYS
         sync: false
       - key: SUPABASE_URL
         sync: false
