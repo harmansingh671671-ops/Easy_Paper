@@ -11,7 +11,7 @@ router = APIRouter()
 def get_profile_service(supabase: Client = Depends(get_supabase)) -> ProfileService:
     return ProfileService(supabase)
 
-@router.post("/profile", response_model=Profile, status_code=201)
+@router.post("/", response_model=Profile, status_code=201)
 async def create_or_update_profile(
     profile_data: ProfileCreate,
     user: dict = Depends(get_current_user),
