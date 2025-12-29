@@ -129,7 +129,7 @@ function AppRoutes() {
       />
       <Route
         path="/sign-up"
-        element={!user ? <SignUp /> : <Navigate to="/dashboard" replace />}
+        element={!user ? <Signup /> : <Navigate to="/dashboard" replace />}
       />
 
       {/* Onboarding - requires sign in but not profile */}
