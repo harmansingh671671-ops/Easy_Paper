@@ -4,8 +4,9 @@ services:
     env: python
     region: singapore # or ohio, frankfurt, etc.
     plan: free
-    buildCommand: cd server && pip install -r requirements.txt
-    startCommand: cd server && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    rootDirectory: question-paper-generator/server
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: SCALAR_DOCS
         value: "true"
