@@ -151,8 +151,11 @@ const aiService = {
         throw new Error("Not authenticated");
       }
 
+      // Determine base URL from env or default
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+
       // Use native fetch to handle streaming
-      const response = await fetch('http://localhost:8000/api/v1/ai/process-pdf', {
+      const response = await fetch(`${BASE_URL}/ai/process-pdf`, {
         method: 'POST',
         body: formData,
         headers: {

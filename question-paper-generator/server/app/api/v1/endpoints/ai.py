@@ -72,12 +72,16 @@ async def generate_notes(
         # Store result
         if search_topic and notes:
              try:
-                 supabase.table("lecture_notes").insert({
+                 print(f"DEBUG: Attempting to insert NOTE into DB. User: {user_id}, Topic: {search_topic}")
+                 data = {
                      "user_id": user_id,
                      "topic": search_topic,
                      "content": notes
-                 }).execute()
+                 }
+                 res = supabase.table("lecture_notes").insert(data).execute()
+                 print(f"DEBUG: Insert Success! Response: {res}")
              except Exception as e:
+                 print(f"DEBUG: Insert FAILED: {e}")
                  logger.error(f"Failed to cache notes: {e}")
 
         return {"notes": notes}
@@ -89,13 +93,16 @@ async def generate_notes(
 async def generate_flashcards(
     content: str = Form(...),
     num_cards: int = Form(10),
+    topic: Optional[str] = Form(None),
     user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase)
 ):
     """Generate flashcards from content"""
     try:
         user_id = user.id
-        search_topic = content if len(content) < 200 else None
+        search_topic = topic
+        if not search_topic and len(content) < 200:
+             search_topic = content
         
         if search_topic:
              existing = supabase.table("ai_flashcards").select("*").eq("user_id", user_id).eq("topic", search_topic).execute()
@@ -108,12 +115,15 @@ async def generate_flashcards(
         
         if search_topic and flashcards:
              try:
+                 print(f"DEBUG: Attempting to insert FLASHCARDS. User: {user_id}, Topic: {search_topic}")
                  supabase.table("ai_flashcards").insert({
                      "user_id": user_id,
                      "topic": search_topic,
                      "cards": flashcards
                  }).execute()
+                 print("DEBUG: Flashcard insert success")
              except Exception as e:
+                 print(f"DEBUG: Flashcard Insert FAILED: {e}")
                  logger.error(f"Failed to cache flashcards: {e}")
 
         return {"flashcards": flashcards}
@@ -125,13 +135,16 @@ async def generate_quiz(
     content: str = Form(...),
     num_questions: int = Form(10),
     question_type: str = Form("mixed"),
+    topic: Optional[str] = Form(None),
     user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase)
 ):
     """Generate quiz questions from content"""
     try:
         user_id = user.id
-        search_topic = content if len(content) < 200 else None
+        search_topic = topic
+        if not search_topic and len(content) < 200:
+             search_topic = content
         
         if search_topic:
              existing = supabase.table("ai_quizzes").select("*").eq("user_id", user_id).eq("topic", search_topic).execute()
@@ -144,12 +157,15 @@ async def generate_quiz(
         
         if search_topic and quiz:
              try:
+                 print(f"DEBUG: Attempting to insert QUIZ. User: {user_id}, Topic: {search_topic}")
                  supabase.table("ai_quizzes").insert({
                      "user_id": user_id,
                      "topic": search_topic,
                      "questions": quiz
                  }).execute()
+                 print("DEBUG: Quiz insert success")
              except Exception as e:
+                 print(f"DEBUG: Quiz Insert FAILED: {e}")
                  logger.error(f"Failed to cache quiz: {e}")
 
         return {"questions": quiz}
@@ -181,12 +197,15 @@ async def generate_mindmap(
         
         if search_topic and mindmap:
              try:
+                 print(f"DEBUG: Attempting to insert MINDMAP. User: {user_id}, Topic: {search_topic}")
                  supabase.table("ai_mindmaps").insert({
                      "user_id": user_id,
                      "topic": search_topic,
                      "structure": mindmap
                  }).execute()
+                 print("DEBUG: Mindmap insert success")
              except Exception as e:
+                 print(f"DEBUG: Mindmap Insert FAILED: {e}")
                  logger.error(f"Failed to cache mindmap: {e}")
 
         return {"mindmap": mindmap}

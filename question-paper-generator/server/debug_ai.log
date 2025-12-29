@@ -14375,3 +14375,78 @@ Exception: Failed to generate content after exhausting all retry attempts.
 2025-12-28 16:47:42,580 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
 2025-12-28 16:48:41,761 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
 2025-12-28 16:50:05,689 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 21:51:29,100 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-28 21:51:29,427 - INFO - Converted PDF to 2 images
+2025-12-28 21:51:29,429 - INFO - Processing Batch 1/1 (2 pages)
+2025-12-28 21:51:29,898 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 21:51:51,974 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 21:53:09,071 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 21:53:35,806 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 22:05:25,213 - INFO - Converted PDF to 2 images
+2025-12-28 22:05:26,869 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 23:51:15,846 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-28 23:51:16,066 - INFO - Converted PDF to 2 images
+2025-12-28 23:51:16,067 - INFO - Processing Batch 1/1 (2 pages)
+2025-12-28 23:51:16,546 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 23:51:43,395 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 23:52:55,220 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-28 23:53:32,730 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 00:00:39,462 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-29 00:00:39,684 - INFO - Converted PDF to 2 images
+2025-12-29 00:00:39,685 - INFO - Processing Batch 1/1 (2 pages)
+2025-12-29 00:00:40,141 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 00:01:00,182 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 00:01:35,405 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 00:01:57,421 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 00:08:35,291 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-29 00:08:35,515 - INFO - Converted PDF to 2 images
+2025-12-29 00:08:35,516 - INFO - Processing Batch 1/1 (2 pages)
+2025-12-29 00:08:36,020 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 00:08:55,203 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 00:09:39,243 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 00:10:35,277 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 00:16:46,291 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-29 00:16:46,422 - INFO - Converted PDF to 1 images
+2025-12-29 00:16:46,422 - INFO - Processing Batch 1/1 (1 pages)
+2025-12-29 00:16:46,903 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 00:17:09,596 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 00:18:13,377 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 00:19:32,659 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 09:29:20,252 - INFO - AI Service Initialized with Model: nvidia/nemotron-nano-12b-v2-vl:free (Vision-Language Mode)
+2025-12-29 09:29:20,871 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 09:29:23,717 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 09:29:25,734 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 09:29:27,129 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 09:29:28,210 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 09:29:29,750 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 09:29:36,594 - ERROR - Generate Flashcards Error: 'str' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Question_Paper\Easy_Paper\question-paper-generator\server\app\services\ai_service.py", line 271, in generate_flashcards
+    flashcards = data.get("flashcards", [])
+                 ^^^^^^^^
+AttributeError: 'str' object has no attribute 'get'
+2025-12-29 09:29:38,070 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 09:29:39,853 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 09:29:43,867 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 09:29:47,878 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 09:29:50,852 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 09:29:56,173 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 09:29:58,067 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...cc12
+2025-12-29 09:32:04,186 - WARNING - Attempt 1 failed with key ...cc12: 'NoneType' object is not subscriptable
+2025-12-29 09:32:05,630 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-29 09:40:32,283 - INFO - Converted PDF to 20 images
+2025-12-29 09:40:32,283 - INFO - Processing Batch 1/2 (10 pages)
+2025-12-29 09:40:32,738 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-29 09:41:47,332 - INFO - Processing Batch 2/2 (10 pages)
+2025-12-29 09:41:47,781 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-29 09:42:17,101 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-29 09:43:11,240 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-29 09:44:53,910 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-29 09:49:45,973 - INFO - Converted PDF to 16 images
+2025-12-29 09:49:45,974 - INFO - Processing Batch 1/2 (10 pages)
+2025-12-29 09:49:46,560 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-29 09:49:59,872 - INFO - Processing Batch 2/2 (6 pages)
+2025-12-29 09:50:00,504 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-29 09:50:25,994 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-29 09:51:05,503 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887
+2025-12-29 09:52:16,520 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...a887

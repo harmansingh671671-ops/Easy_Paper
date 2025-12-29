@@ -16,29 +16,33 @@ async def get_history(
     try:
         user_id = user.id
         
-        # We query the lecture_notes table for distinct topics
-        # Note: In a production app with millions of rows, we might want a dedicated 'topics' table.
-        # But for this use case, we can select distinct topics from lecture_notes.
-        
-        response = supabase.table("lecture_notes").select("topic, created_at").eq("user_id", user_id).order("created_at", desc=True).execute()
-        
-        # We might have duplicates if we store multiple entries (though logic tries to prevent it).
-        # Let's dedup by topic in python for simplicity if needed, but select should handle it if distinct wasn't available.
-        # Supabase/PostgREST doesn't support SELECT DISTINCT easy via JS/Python client without RPC usually,
-        # so we'll just fetch all headers and dedup here.
+        # Query all tables to get comprehensive history
+        notes = supabase.table("lecture_notes").select("topic, created_at").eq("user_id", user_id).execute()
+        flashcards = supabase.table("ai_flashcards").select("topic, created_at").eq("user_id", user_id).execute()
+        quizzes = supabase.table("ai_quizzes").select("topic, created_at").eq("user_id", user_id).execute()
+        mindmaps = supabase.table("ai_mindmaps").select("topic, created_at").eq("user_id", user_id).execute()
         
         history = []
         seen_topics = set()
         
-        if response.data:
-            for item in response.data:
+        # Helper to process results
+        def process_rows(rows):
+            for item in rows:
                 t = item['topic']
-                if t not in seen_topics:
+                if t and t not in seen_topics:
                     seen_topics.add(t)
                     history.append({
                         "topic": t,
                         "date": item['created_at']
                     })
+
+        if notes.data: process_rows(notes.data)
+        if flashcards.data: process_rows(flashcards.data)
+        if quizzes.data: process_rows(quizzes.data)
+        if mindmaps.data: process_rows(mindmaps.data)
+        
+        # Sort by date descending
+        history.sort(key=lambda x: x['date'], reverse=True)
         
         return history
     except Exception as e:
