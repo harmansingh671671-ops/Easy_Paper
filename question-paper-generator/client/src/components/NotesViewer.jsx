@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FileText, Download, Copy, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import html2pdf from 'html2pdf.js';
 
 function NotesViewer({ notes, title = 'Short Notes' }) {
   const [copied, setCopied] = useState(false);
@@ -16,18 +17,18 @@ function NotesViewer({ notes, title = 'Short Notes' }) {
   };
 
   const handleDownload = () => {
-    const blob = new Blob([notes], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${title.replace(/\s+/g, '_')}_notes.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const element = document.getElementById('notes-content');
+    const opt = {
+      margin: [10, 10, 10, 10], // top, left, bottom, right in mm
+      filename: `${title.replace(/\s+/g, '_')}_notes.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Generate PDF
+    html2pdf().set(opt).from(element).save();
   };
-
-
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
@@ -47,14 +48,25 @@ function NotesViewer({ notes, title = 'Short Notes' }) {
           <button
             onClick={handleDownload}
             className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Download notes"
+            title="Download PDF"
           >
             <Download size={20} />
           </button>
         </div>
       </div>
 
-      <div className="prose max-w-none prose-indigo">
+      <div
+        id="notes-content"
+        className="prose max-w-none prose-indigo 
+          prose-headings:font-bold prose-headings:text-gray-900 
+          prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg 
+          prose-p:text-gray-700 prose-p:leading-relaxed
+          prose-ul:list-disc prose-ul:pl-5 
+          prose-li:text-gray-700 prose-li:my-1
+          [&_ul_ul]:list-[circle] [&_ul_ul]:pl-6 [&_ul_ul]:my-1
+          [&_ul_ul_ul]:list-[square] [&_ul_ul_ul]:pl-6
+          space-y-4"
+      >
         <ReactMarkdown>{notes}</ReactMarkdown>
       </div>
     </div>

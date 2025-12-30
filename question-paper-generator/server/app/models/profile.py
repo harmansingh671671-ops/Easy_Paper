@@ -8,11 +8,17 @@ class ProfileBase(BaseModel):
     role: str  # 'teacher' or 'student'
     category: Optional[str] = None  # 'college', 'school', 'competition' or None
     categories: Optional[List[str]] = None
+    selected_grades: Optional[List[str]] = None
+    selected_years: Optional[List[str]] = None
+    target_exam: Optional[str] = None
 
 class ProfileCreate(BaseModel):
     role: str  # 'teacher' or 'student'
     category: Optional[str] = None  # 'college', 'school', 'competition' or None
     categories: Optional[List[str]] = None
+    selected_grades: Optional[List[str]] = None
+    selected_years: Optional[List[str]] = None
+    target_exam: Optional[str] = None
 
 class Profile(ProfileBase):
     id: UUID
@@ -26,6 +32,9 @@ class ProfileUpdate(BaseModel):
     role: Optional[str] = None
     category: Optional[str] = None
     categories: Optional[List[str]] = None
+    selected_grades: Optional[List[str]] = None
+    selected_years: Optional[List[str]] = None
+    target_exam: Optional[str] = None
 
 
 

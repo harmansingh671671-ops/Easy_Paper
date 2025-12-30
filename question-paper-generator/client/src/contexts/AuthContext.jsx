@@ -47,7 +47,12 @@ export const AuthProvider = ({ children }) => {
   const value = {
     signUp: (data) => supabase.auth.signUp(data),
     signIn: (data) => supabase.auth.signInWithPassword(data),
-    signInWithOAuth: (provider) => supabase.auth.signInWithOAuth({ provider }),
+    signInWithOAuth: (provider) => supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: window.location.origin,
+      }
+    }),
     signOut: () => supabase.auth.signOut(),
     user,
     session,

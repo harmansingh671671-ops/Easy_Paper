@@ -18,6 +18,19 @@ const questionService = {
       if (filters.search) params.append('search', filters.search);
       if (filters.category) params.append('category', filters.category);
 
+      // Handle array/list filters
+      const appendList = (key, value) => {
+        if (Array.isArray(value)) {
+          value.forEach(v => params.append(key, v));
+        } else if (value) {
+          params.append(key, value);
+        }
+      };
+
+      appendList('grade', filters.grade);
+      appendList('year', filters.year);
+      appendList('exam', filters.exam);
+
       const response = await api.get(`/questions/?${params.toString()}`);
       return response.data;
     } catch (error) {

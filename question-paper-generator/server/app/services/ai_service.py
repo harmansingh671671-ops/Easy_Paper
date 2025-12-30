@@ -223,14 +223,24 @@ class AIService:
                  content = content[:10]
             
             prompt = f"""
-            Analyze the provided document images and create a comprehensive study guide.
+            Analyze the provided document images/content and create a comprehensive study guide.
             Topic: {topic if topic else 'General'}
             
-            Instructions:
-            1. Write a detailed analysis.
-            2. Use Markdown Headers.
-            3. Explain complex concepts clearly.
-            4. Analyze the visual/text content thoroughly.
+            **CRITICAL FORMATTING RULES (Follow Strictly)**:
+            1.  **Main Headers**: Use `## Header` for main topics.
+            2.  **Sub Headers**: Use `### Subheader` for sub-topics.
+            3.  **Strict Nesting**:
+                -   Use **4 SPACES** for indentation of nested items (Do not use tabs).
+                -   Level 1: `- Main Point`
+                -   Level 2: `    - Detail for main point` (Indented 4 spaces)
+                -   Level 3: `        - Sub-detail` (Indented 8 spaces)
+            4.  **Spacing**:
+                -   Add an empty line before every Main Header.
+                -   Add an empty line between distinct list items if they are long.
+            
+            **Content Style**:
+            -   Be detailed and educational (ChatGPT style).
+            -   Use Bold for keywords: `- **Concept**: Definition`.
             
             Return valid JSON matching the schema: {{ "analysis": "markdown string" }}
             """

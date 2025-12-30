@@ -15,6 +15,13 @@ function Onboarding() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Step 3 State
+  const [selectedDetails, setSelectedDetails] = useState({
+    grades: [],
+    years: [],
+    exam: ''
+  });
+
   // Check for existing partial profile
   useEffect(() => {
     const checkExistingProfile = async () => {
@@ -28,6 +35,13 @@ function Onboarding() {
             setRole(profile.role);
             if (!profile.category) {
               setStep(2);
+            } else if (
+              (!profile.selected_grades || profile.selected_grades.length === 0) &&
+              (!profile.selected_years || profile.selected_years.length === 0) &&
+              !profile.target_exam
+            ) {
+              setCategory(profile.category);
+              setStep(3);
             } else {
               navigate('/dashboard');
             }
@@ -53,7 +67,7 @@ function Onboarding() {
     setLoading(true);
     try {
       // Save step 1 (Role) immediately
-      const response = await api.post('/profile', {
+      const response = await api.post('/profile/', {
         role: selectedRole,
       });
       setProfile(response.data);
@@ -66,9 +80,23 @@ function Onboarding() {
     }
   };
 
-  const handleCategorySelect = (selectedCategory) => {
+  const handleCategorySelect = async (selectedCategory) => {
     setCategory(selectedCategory);
-    handleSubmit(role, selectedCategory);
+    setLoading(true);
+    try {
+      // Save step 2 (Category) immediately
+      const response = await api.post('/profile', {
+        role: role,
+        category: selectedCategory,
+      });
+      setProfile(response.data);
+      setStep(3);
+    } catch (err) {
+      console.error('Failed to save category:', err);
+      setError('Failed to save progress. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (role, category) => {
@@ -78,11 +106,17 @@ function Onboarding() {
     setError('');
 
     try {
-      // Update profile with category (Step 2)
-      const response = await api.post('/profile', {
+      // Prepare payload based on category
+      const payload = {
         role,
         category,
-      });
+        selected_grades: category === 'school' ? selectedDetails.grades : [],
+        selected_years: category === 'college' ? selectedDetails.years : [],
+        target_exam: category === 'competition' ? selectedDetails.exam : null
+      };
+
+      // Update profile with category and details
+      const response = await api.post('/profile', payload);
 
       // Update profile context
       setProfile(response.data);
@@ -129,7 +163,7 @@ function Onboarding() {
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-2">
-            {[1, 2].map((s) => (
+            {[1, 2, 3].map((s) => (
               <div
                 key={s}
                 className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${step >= s
@@ -222,6 +256,118 @@ function Onboarding() {
               >
                 <Trophy className="text-indigo-600 mb-3 mx-auto" size={32} />
                 <h3 className="font-semibold text-gray-900">Competition</h3>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Specific Selection (Grade/Year/Exam) */}
+        {step === 3 && (
+          <div className="space-y-4">
+            <button
+              onClick={() => setStep(2)}
+              className="text-indigo-600 hover:text-indigo-700 text-sm font-medium mb-4"
+            >
+              ← Back
+            </button>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              {category === 'school' && (role === 'teacher' ? 'Which grades do you teach?' : 'Which grade are you in?')}
+              {category === 'college' && (role === 'teacher' ? 'Which years do you teach?' : 'Which year are you in?')}
+              {category === 'competition' && 'Which exam are you preparing for?'}
+            </h2>
+
+            <div className={`grid ${category === 'competition' ? 'grid-cols-2' : 'grid-cols-3'} gap-3`}>
+              {/* School Grades Options */}
+              {category === 'school' && ['12th', '11th', '10th', '9th', '8th', '7th', '6th', '5th', '4th', '3rd', '2nd', '1st'].map((grade) => {
+                const isSelected = selectedDetails.grades.includes(grade);
+                return (
+                  <button
+                    key={grade}
+                    onClick={() => {
+                      if (role === 'teacher') {
+                        // Multi-select for teachers
+                        setSelectedDetails(prev => ({
+                          ...prev,
+                          grades: isSelected
+                            ? prev.grades.filter(g => g !== grade)
+                            : [...prev.grades, grade]
+                        }));
+                      } else {
+                        // Single-select for students
+                        setSelectedDetails(prev => ({ ...prev, grades: [grade] }));
+                      }
+                    }}
+                    className={`p-3 border rounded-lg transition-all text-sm font-medium ${isSelected
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'border-gray-200 text-gray-700 hover:border-indigo-300'
+                      }`}
+                  >
+                    {grade} Grade
+                  </button>
+                );
+              })}
+
+              {/* College Years Options */}
+              {category === 'college' && ['1st Year', '2nd Year', '3rd Year', '4th Year'].map((year) => {
+                const isSelected = selectedDetails.years.includes(year);
+                return (
+                  <button
+                    key={year}
+                    onClick={() => {
+                      if (role === 'teacher') {
+                        setSelectedDetails(prev => ({
+                          ...prev,
+                          years: isSelected
+                            ? prev.years.filter(y => y !== year)
+                            : [...prev.years, year]
+                        }));
+                      } else {
+                        setSelectedDetails(prev => ({ ...prev, years: [year] }));
+                      }
+                    }}
+                    className={`p-3 border rounded-lg transition-all text-sm font-medium ${isSelected
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'border-gray-200 text-gray-700 hover:border-indigo-300'
+                      }`}
+                  >
+                    {year}
+                  </button>
+                );
+              })}
+
+              {/* Competition Exam Options */}
+              {category === 'competition' && ['JEE', 'NEET', 'NDA', 'Other'].map((exam) => {
+                return (
+                  <button
+                    key={exam}
+                    onClick={() => setSelectedDetails(prev => ({ ...prev, exam: exam }))}
+                    className={`p-4 border rounded-lg transition-all text-sm font-medium ${selectedDetails.exam === exam
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'border-gray-200 text-gray-700 hover:border-indigo-300'
+                      }`}
+                  >
+                    {exam}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-8 pt-4 border-t border-gray-100 flex justify-end">
+              <button
+                onClick={() => handleSubmit(role, category)}
+                disabled={loading || (
+                  (category === 'school' && selectedDetails.grades.length === 0) ||
+                  (category === 'college' && selectedDetails.years.length === 0) ||
+                  (category === 'competition' && !selectedDetails.exam)
+                )}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader className="animate-spin" size={18} />
+                    Saving...
+                  </span>
+                ) : 'Complete Setup'}
               </button>
             </div>
           </div>

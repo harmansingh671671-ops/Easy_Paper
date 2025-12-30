@@ -23,11 +23,27 @@ function QuestionLibrary({ showCreateButton = true, enableSelection = false, sel
     page: 1,
     page_size: 20,
     category: user?.category || '',
+    grade: user?.role === 'student' && user?.selected_grades?.length ? user.selected_grades[0] : '',
+    year: user?.role === 'student' && user?.selected_years?.length ? user.selected_years[0] : '',
+    exam: user?.role === 'student' && user?.target_exam ? user.target_exam : '',
   });
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { paperQuestions, getTotalMarks } = usePaper();
+
+  // Sync filters with user profile when it loads (handling async updates)
+  useEffect(() => {
+    if (user) {
+      setFilters(prev => ({
+        ...prev,
+        category: user.category || prev.category,
+        grade: user.role === 'student' && user.selected_grades?.length ? user.selected_grades[0] : prev.grade,
+        year: user.role === 'student' && user.selected_years?.length ? user.selected_years[0] : prev.year,
+        exam: user.role === 'student' && user.target_exam ? user.target_exam : prev.exam,
+      }));
+    }
+  }, [user]);
 
   // Fetch questions when filters change
   useEffect(() => {
@@ -39,12 +55,32 @@ function QuestionLibrary({ showCreateButton = true, enableSelection = false, sel
       setLoading(true);
       setError(null);
 
+      // Enforce student constraints strictly before fetch
+      const isStudent = user?.role === 'student';
+      const isTeacher = user?.role === 'teacher';
+
       const cleanFilters = {
         ...Object.fromEntries(
           Object.entries(filters).filter(([_, value]) => value !== '')
         ),
         category: user?.category || filters.category,
       };
+
+      if (isStudent) {
+        if (user.selected_grades?.length) cleanFilters.grade = user.selected_grades[0];
+        if (user.selected_years?.length) cleanFilters.year = user.selected_years[0];
+        if (user.target_exam) cleanFilters.exam = user.target_exam;
+      }
+
+      if (isTeacher) {
+        // If no specific grade selected in filter, restrain to ALL selected grades
+        if (!cleanFilters.grade && user.selected_grades?.length) {
+          cleanFilters.grade = user.selected_grades;
+        }
+        if (!cleanFilters.year && user.selected_years?.length) {
+          cleanFilters.year = user.selected_years;
+        }
+      }
 
       const data = await questionService.getAllQuestions(cleanFilters);
       setQuestions(data.questions);
@@ -75,7 +111,11 @@ function QuestionLibrary({ showCreateButton = true, enableSelection = false, sel
       search: '',
       page: 1,
       page_size: 20,
+      // Reset to profile defaults for students
       category: user?.category || '',
+      grade: user?.role === 'student' && user?.selected_grades?.length ? user.selected_grades[0] : '',
+      year: user?.role === 'student' && user?.selected_years?.length ? user.selected_years[0] : '',
+      exam: user?.role === 'student' && user?.target_exam ? user.target_exam : '',
     });
   };
 

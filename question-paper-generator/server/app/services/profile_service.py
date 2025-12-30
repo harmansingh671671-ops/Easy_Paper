@@ -23,6 +23,14 @@ class ProfileService:
             profile_dict["category"] = profile_data.category
         if profile_data.categories:
             profile_dict["categories"] = profile_data.categories
+            
+        # Add new fields
+        if profile_data.selected_grades:
+            profile_dict["selected_grades"] = profile_data.selected_grades
+        if profile_data.selected_years:
+            profile_dict["selected_years"] = profile_data.selected_years
+        if profile_data.target_exam:
+            profile_dict["target_exam"] = profile_data.target_exam
         
         if existing.data and len(existing.data) > 0:
             # Update existing

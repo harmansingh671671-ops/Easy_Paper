@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, HttpUrl
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 from datetime import datetime
 from uuid import UUID
@@ -20,6 +20,11 @@ class QuestionBase(BaseModel):
     topic: str = Field(..., min_length=1, max_length=200)
     difficulty: str = Field(default="MEDIUM", max_length=20)
     category: Optional[str] = Field(None, max_length=20)  # college, school, competition
+    
+    # New Fields for Filtering
+    grade: Optional[str] = Field(None, max_length=20)
+    year: Optional[str] = Field(None, max_length=20)
+    exam: Optional[str] = Field(None, max_length=20)
     
     # Question content
     question_text: str = Field(..., min_length=1)
@@ -54,6 +59,9 @@ class QuestionUpdate(BaseModel):
     topic: Optional[str] = None
     difficulty: Optional[str] = None
     category: Optional[str] = None
+    grade: Optional[str] = None
+    year: Optional[str] = None
+    exam: Optional[str] = None
     question_text: Optional[str] = None
     image_url: Optional[str] = None
     option_a: Optional[str] = None
@@ -87,6 +95,9 @@ class QuestionFilter(BaseModel):
     is_starred: Optional[bool] = None
     search: Optional[str] = None  # For searching in question_text
     category: Optional[str] = None  # Filter by category (college, school, competition)
+    grade: Optional[List[str]] = None
+    year: Optional[List[str]] = None
+    exam: Optional[List[str]] = None
 
 # List Response Model (for paginated results)
 class QuestionListResponse(BaseModel):

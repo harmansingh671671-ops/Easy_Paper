@@ -35,6 +35,9 @@ async def get_questions(
     is_starred: Optional[bool] = None,
     search: Optional[str] = None,
     category: Optional[str] = None,
+    grade: Optional[List[str]] = Query(None),
+    year: Optional[List[str]] = Query(None),
+    exam: Optional[List[str]] = Query(None),
     service: QuestionService = Depends(get_question_service)
 ):
     """
@@ -59,7 +62,10 @@ async def get_questions(
         question_type=question_type,
         is_starred=is_starred,
         search=search,
-        category=category
+        category=category,
+        grade=grade,
+        year=year,
+        exam=exam
     )
     
     # Get questions

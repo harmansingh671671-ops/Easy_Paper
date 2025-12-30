@@ -5,20 +5,22 @@ import {
   BookOpen,
   FileText,
   HelpCircle,
-  LogOut,
-  Plus
+  Plus,
+  User
 } from 'lucide-react';
 import QuestionLibrary from '../components/QuestionLibrary';
 import LecturePreparationTab from '../components/LecturePreparationTab';
 import TeacherPaperCreator from '../components/TeacherPaperCreator';
 import teacherService from '../services/teacherService';
+import ProfileModal from '../components/ProfileModal';
 
 function TeacherDashboard() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { profile } = useProfile();
   const [activeTab, setActiveTab] = useState('library');
   const [viewState, setViewState] = useState('list'); // 'list' or 'create_paper'
   const [papers, setPapers] = useState([]);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   // Fetch papers when tab is active
   useEffect(() => {
@@ -70,11 +72,11 @@ function TeacherDashboard() {
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-600">{user?.email}</span>
               <button
-                onClick={() => signOut()}
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={() => setIsProfileOpen(true)}
+                className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-200 transition-colors"
+                title="My Profile"
               >
-                <LogOut size={20} />
-                <span>Logout</span>
+                <User size={20} />
               </button>
             </div>
           </div>
@@ -153,6 +155,11 @@ function TeacherDashboard() {
           )}
         </div>
       </div>
+
+      <ProfileModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+      />
     </div>
   );
 }

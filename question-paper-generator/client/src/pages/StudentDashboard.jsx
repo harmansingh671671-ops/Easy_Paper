@@ -4,16 +4,18 @@ import { useProfile } from '../App';
 import {
   BookOpen,
   Brain,
-  LogOut,
-  GraduationCap
+  GraduationCap,
+  User
 } from 'lucide-react';
 import QuestionLibrary from '../components/QuestionLibrary';
 import RevisionTab from '../components/RevisionTab';
+import ProfileModal from '../components/ProfileModal';
 
 function StudentDashboard() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { profile } = useProfile();
   const [activeTab, setActiveTab] = useState('practice'); // 'practice', 'revision'
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const categoryLabels = {
     college: 'College',
@@ -68,11 +70,11 @@ function StudentDashboard() {
             <div className="flex items-center gap-4">
               <span className="hidden sm:inline text-sm text-gray-600">{user?.email}</span>
               <button
-                onClick={() => signOut()}
-                className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                title="Logout"
+                onClick={() => setIsProfileOpen(true)}
+                className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-200 transition-colors"
+                title="My Profile"
               >
-                <LogOut size={20} />
+                <User size={20} />
               </button>
             </div>
           </div>
@@ -94,6 +96,11 @@ function StudentDashboard() {
           <RevisionTab />
         )}
       </main>
+
+      <ProfileModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+      />
     </div>
   );
 }
