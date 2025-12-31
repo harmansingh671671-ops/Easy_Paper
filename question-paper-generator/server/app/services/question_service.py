@@ -36,65 +36,72 @@ class QuestionService:
             if filters.search:
                 query = query.ilike("question_text", f"%{filters.search}%")
             if filters.category:
-                query = query.eq("category", filters.category)
+                # Use ilike for case-insensitive matching (DB has 'School', frontend sends 'school')
+                query = query.ilike("category", filters.category)
             
             # New Filters: Handle legacy class_grade for 'grade' filter
             if filters.grade:
                 # Ensure it's a list
                 grades = filters.grade if isinstance(filters.grade, list) else [filters.grade]
                 
-                legacy_grades = []
+                search_values = []
                 for g in grades:
                     g_lower = g.lower()
                     
-                    # 1. Handle College Years (1st Year -> 1)
+                    # 1. College Logic: "1st Year" or "1" -> Map to ["1", "1st", "1st Year"]
                     if 'year' in g_lower:
-                        if '1st' in g_lower: legacy_grades.extend(['1', '1st'])
-                        elif '2nd' in g_lower: legacy_grades.extend(['2', '2nd'])
-                        elif '3rd' in g_lower: legacy_grades.extend(['3', '3rd'])
-                        elif '4th' in g_lower: legacy_grades.extend(['4', '4th'])
+                        if '1st' in g_lower or '1' == g: search_values.extend(['1', '1st', '1st Year'])
+                        elif '2nd' in g_lower or '2' == g: search_values.extend(['2', '2nd', '2nd Year'])
+                        elif '3rd' in g_lower or '3' == g: search_values.extend(['3', '3rd', '3rd Year'])
+                        elif '4th' in g_lower or '4' == g: search_values.extend(['4', '4th', '4th Year'])
+                        else: search_values.append(g)
                     
-                    # 2. Handle School Classes (10th -> 10, Class 10, IX, etc.)
-                    # User said: "changed all the classes names to 9th, 10th"
-                    # But also "store 1st, 2nd... for students in school" (conflicting info, simpler to handle variants)
-                    
-                    # Add exact legacy version (e.g., '10th' -> '10')
-                    clean = g_lower.replace('th', '').replace('st', '').replace('nd', '').replace('rd', '').strip()
-                    if clean.isdigit():
-                        legacy_grades.append(clean)                    
-                        legacy_grades.append(f"Class {clean}")
-                    
-                    # Add 9th, 10th explicitly if they passed numbers
-                    legacy_grades.append(g)
+                    # 2. School Logic: "12", "12th", "Class 12" -> Map to ["12th", "12", "Class 12", "12th Class"]
+                    # User: "make it ... 2nd class for school students" + Screenshot "Class 2"
+                    else:
+                        clean = g_lower.replace('th', '').replace('st', '').replace('nd', '').replace('rd', '').replace('class', '').strip()
+                        if clean.isdigit():
+                            # Re-construct standard format "12th", "1st"
+                            suffix = "th"
+                            if clean.endswith('1') and clean != '11': suffix = "st"
+                            elif clean.endswith('2') and clean != '12': suffix = "nd"
+                            elif clean.endswith('3') and clean != '13': suffix = "rd"
+                            
+                            standard = f"{clean}{suffix}"
+                            
+                            # Add ALL variations
+                            search_values.append(standard)          # "2nd"
+                            search_values.append(clean)             # "2"
+                            search_values.append(f"Class {clean}")  # "Class 2" (Matches screenshot)
+                            search_values.append(f"{standard} Class") # "2nd Class" (Explicit Request)
+                            search_values.append(g)                 # Original
+                        else:
+                             search_values.append(g)
 
                 # Remove duplicates
-                legacy_grades = list(set(legacy_grades))
+                final_search_grades = list(set(search_values))
                 
-                # Combine original and mapped grades
-                final_search_grades = list(set(grades + legacy_grades))
-
                 # TARGET CLASS_GRADE DIRECTLY
-                # The user's data is in 'class_grade' column (e.g. '12th').
-                # Since .or_() is not available, we filter the column where data is known to exist.
-                # This supports '12th', '12', 'Class 12' matching against 'class_grade'.
-                
                 query = query.in_("class_grade", final_search_grades)
 
             if filters.year:
-                # Handle Year mapping (1st Year -> 1, etc)
+                # Handle Year -> class_grade mapping
+                # User confirmed college years (1, 2, 3, 4) are stored in 'class_grade'
                 years = filters.year if isinstance(filters.year, list) else [filters.year]
                 expanded_years = []
                 for y in years:
                     y_lower = y.lower()
-                    expanded_years.append(y)
-                    # Common variations
+                    
+                    # Robust mapping: "2nd Year" -> "2", "2nd", "2nd Year"
                     if '1st' in y_lower or '1' == y: expanded_years.extend(['1', '1st', '1st Year'])
-                    if '2nd' in y_lower or '2' == y: expanded_years.extend(['2', '2nd', '2nd Year'])
-                    if '3rd' in y_lower or '3' == y: expanded_years.extend(['3', '3rd', '3rd Year'])
-                    if '4th' in y_lower or '4' == y: expanded_years.extend(['4', '4th', '4th Year'])
+                    elif '2nd' in y_lower or '2' == y: expanded_years.extend(['2', '2nd', '2nd Year'])
+                    elif '3rd' in y_lower or '3' == y: expanded_years.extend(['3', '3rd', '3rd Year'])
+                    elif '4th' in y_lower or '4' == y: expanded_years.extend(['4', '4th', '4th Year'])
+                    else: expanded_years.append(y)
                 
                 final_search_years = list(set(expanded_years))
-                query = query.in_("year", final_search_years)
+                # TARGET CLASS_GRADE (User requirement)
+                query = query.in_("class_grade", final_search_years)
             
             if filters.exam:
                 if isinstance(filters.exam, list):

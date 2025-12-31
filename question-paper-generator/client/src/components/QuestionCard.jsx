@@ -61,7 +61,44 @@ const QuestionCard = ({ question, onToggleStar, onDelete }) => {
             {question.question_type}
           </span>
           <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
-            Class {question.class_grade}
+            {(() => {
+              const grade = question.class_grade;
+              if (!grade) return 'Grade N/A';
+
+              // Helper to get ordinal suffix
+              const getOrdinal = (n) => {
+                const s = ["th", "st", "nd", "rd"];
+                const v = n % 100;
+                return n + (s[(v - 20) % 10] || s[v] || s[0]);
+              };
+
+              // Display Logic
+              // 1. If it looks like a College Year (1, 2, 3, 4) or user category is College
+              const isCollege = question.category === 'College' || ['1', '2', '3', '4'].includes(grade);
+
+              if (isCollege) {
+                const num = parseInt(grade);
+                if (!isNaN(num)) return `${getOrdinal(num)} Year`;
+                return grade; // Fallback "1st Year" etc
+              }
+
+              // 2. School Logic: "Class 2" -> "2nd Class"
+              // Extract number
+              const numMatch = grade.match(/\d+/);
+              if (numMatch) {
+                const num = parseInt(numMatch[0]);
+                // Allow "12th" to stay "12th" if that's preferred, OR force "12th Class"
+                // User asked: "make it ... 2nd class for school students"
+                if (grade.toLowerCase().includes('class') || grade.length <= 2) {
+                  return `${getOrdinal(num)} Class`;
+                }
+                // If it is already "12th", maybe user wants "12th Class"?
+                // Let's stick to "Xth Class" as requested.
+                return `${getOrdinal(num)} Class`;
+              }
+
+              return grade;
+            })()}
           </span>
           <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getDifficultyColor(question.difficulty)}`}>
             {question.difficulty}

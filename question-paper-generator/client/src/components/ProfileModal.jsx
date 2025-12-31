@@ -12,19 +12,20 @@ export default function ProfileModal({ isOpen, onClose }) {
     const [formData, setFormData] = useState({});
 
     useEffect(() => {
-        if (profile) {
+        if (isOpen && profile) {
             setFormData({
                 role: profile.role || '',
                 // full_name is not in the model yet, but users asked for name. 
                 // We'll fallback to meta or just not show it if not supported backend yet.
                 // Assuming we rely on what's in profile.
                 category: profile.category || '',
+                // Ensure arrays are initialized
                 selected_grades: profile.selected_grades || [],
                 selected_years: profile.selected_years || [],
                 target_exam: profile.target_exam || '',
             });
         }
-    }, [profile]);
+    }, [isOpen, profile]);
 
     if (!isOpen) return null;
 
@@ -76,6 +77,7 @@ export default function ProfileModal({ isOpen, onClose }) {
                                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                     className="w-full p-2 border rounded-lg capitalize"
                                 >
+                                    <option value="" disabled>Select Role</option>
                                     <option value="student">Student</option>
                                     <option value="teacher">Teacher</option>
                                 </select>
@@ -106,6 +108,7 @@ export default function ProfileModal({ isOpen, onClose }) {
                                         }}
                                         className="w-full p-2 border rounded-lg capitalize"
                                     >
+                                        <option value="" disabled>Select Category</option>
                                         <option value="school">School</option>
                                         <option value="college">College</option>
                                         <option value="competition">Competition</option>
@@ -125,6 +128,7 @@ export default function ProfileModal({ isOpen, onClose }) {
                                                 onChange={(e) => setFormData({ ...formData, selected_grades: [e.target.value] })}
                                                 className="w-full p-2 border rounded-lg"
                                             >
+                                                <option value="" disabled>Select Grade</option>
                                                 {['12th', '11th', '10th', '9th', '8th', '7th', '6th', '5th', '4th', '3rd', '2nd', '1st'].map(g => (
                                                     <option key={g} value={g}>{g}</option>
                                                 ))}
@@ -164,6 +168,7 @@ export default function ProfileModal({ isOpen, onClose }) {
                                                 onChange={(e) => setFormData({ ...formData, selected_years: [e.target.value] })}
                                                 className="w-full p-2 border rounded-lg"
                                             >
+                                                <option value="" disabled>Select Year</option>
                                                 {['1st Year', '2nd Year', '3rd Year', '4th Year'].map(y => (
                                                     <option key={y} value={y}>{y}</option>
                                                 ))}
@@ -200,6 +205,7 @@ export default function ProfileModal({ isOpen, onClose }) {
                                             onChange={(e) => setFormData({ ...formData, target_exam: e.target.value })}
                                             className="w-full p-2 border rounded-lg"
                                         >
+                                            <option value="" disabled>Select Exam</option>
                                             {['JEE', 'NEET', 'NDA', 'Other'].map(e => (
                                                 <option key={e} value={e}>{e}</option>
                                             ))}
