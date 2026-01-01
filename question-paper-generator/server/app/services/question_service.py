@@ -38,6 +38,8 @@ class QuestionService:
             if filters.category:
                 # Use ilike for case-insensitive matching (DB has 'School', frontend sends 'school')
                 query = query.ilike("category", filters.category)
+            if filters.source:
+                query = query.eq("source", filters.source)
             
             # New Filters: Handle legacy class_grade for 'grade' filter
             if filters.grade:
