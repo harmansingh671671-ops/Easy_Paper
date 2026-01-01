@@ -8,7 +8,7 @@ import { usePaper } from '../contexts/PaperContext';
 import PaperView from '../pages/PaperView';
 
 function QuestionLibrary({ showCreateButton = true, enableSelection = false, selectedIds = [], onToggleSelection }) {
-  const { profile: user } = useProfile();
+  const { profile: user, loading: profileLoading } = useProfile();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,25 +38,45 @@ function QuestionLibrary({ showCreateButton = true, enableSelection = false, sel
       setFilters(prev => ({
         ...prev,
         category: user.category || prev.category,
-        grade: user.role === 'student' && user.selected_grades?.length ? user.selected_grades[0] : prev.grade,
-        year: user.role === 'student' && user.selected_years?.length ? user.selected_years[0] : prev.year,
-        exam: user.role === 'student' && user.target_exam ? user.target_exam : prev.exam,
+        // Reset/Update fields based on current profile strictly. 
+        // Do NOT fall back to 'prev.grade' if user is student; we must match their profile exactly.
+        grade: user.role === 'student' ? (user.selected_grades?.[0] || '') : prev.grade,
+        year: user.role === 'student' ? (user.selected_years?.[0] || '') : prev.year,
+        exam: user.role === 'student' ? (user.target_exam || '') : prev.exam,
       }));
     }
   }, [user]);
 
   // Fetch questions when filters change
   useEffect(() => {
+    // wait for profile to load
+    if (profileLoading) return;
     fetchQuestions();
-  }, [filters, user?.category]);
+  }, [filters, user?.category, profileLoading]);
 
   const fetchQuestions = async () => {
+    // 1. Guard against loading state
+    if (profileLoading) return;
+
+    // 2. Guard for Students: Do NOT fetch "everything" if filters are momentarily empty during init
+    // Only fetch if they have at least one specific filter relevant to their category
+    const isStudent = user?.role === 'student';
+    if (isStudent && user?.category === 'school' && !filters.grade && !filters.search) {
+      // Don't fetch yet, wait for filter sync
+      return;
+    }
+    if (isStudent && user?.category === 'college' && !filters.year && !filters.search) {
+      return;
+    }
+    if (isStudent && user?.category === 'competition' && !filters.exam && !filters.search) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
       // Enforce student constraints strictly before fetch
-      const isStudent = user?.role === 'student';
       const isTeacher = user?.role === 'teacher';
 
       const cleanFilters = {

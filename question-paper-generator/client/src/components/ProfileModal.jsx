@@ -35,6 +35,8 @@ export default function ProfileModal({ isOpen, onClose }) {
             const response = await api.put('/profile/me', formData);
             setProfile(response.data);
             setIsEditing(false);
+            // Force reload as requested to ensure all app state (questions, filters) syncs perfectly
+            window.location.reload();
         } catch (error) {
             console.error('Failed to update profile:', error);
             alert('Failed to update profile');
