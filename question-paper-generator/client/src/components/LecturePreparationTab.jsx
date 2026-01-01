@@ -175,31 +175,22 @@ function LecturePreparationTab() {
 
     return (
         <div className="flex flex-col h-[calc(100vh-140px)] bg-white rounded-lg shadow-sm overflow-hidden">
-            {/* Horizontal Toolbar */}
-            <div className="flex border-b border-gray-200 bg-gray-50/50 px-6 sticky top-0 z-10 overflow-x-auto no-scrollbar">
-                {[
-                    { id: 'upload', icon: Upload, label: 'Upload & Generate' },
-                    { id: 'notes', icon: FileText, label: 'Short Notes' },
-                    { id: 'quizzes', icon: Zap, label: 'Quizzes' },
-                    { id: 'flashcards', icon: CreditCard, label: 'Flashcards' },
-                    { id: 'mindmaps', icon: Brain, label: 'Mind Map' },
-                    { id: 'history', icon: Clock, label: 'History' }
-                ].map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveSubTab(tab.id)}
-                        className={`
-                            group flex items-center gap-2 px-4 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap
-                            ${activeSubTab === tab.id
-                                ? 'border-indigo-600 text-indigo-600 bg-indigo-50/30'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                            }
-                        `}
+            {/* Center Toolbar (Dropdown) */}
+            <div className="flex justify-center border-b border-gray-200 bg-gray-50/50 px-6 py-2 sticky top-0 z-10">
+                <div className="relative inline-block text-left w-full max-w-xs">
+                    <select
+                        value={activeSubTab}
+                        onChange={(e) => setActiveSubTab(e.target.value)}
+                        className="block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm bg-white shadow-sm"
                     >
-                        <tab.icon size={16} className={activeSubTab === tab.id ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600'} />
-                        {tab.label}
-                    </button>
-                ))}
+                        <option value="upload">Upload & Generate</option>
+                        <option value="notes">Short Notes</option>
+                        <option value="quizzes">Quizzes</option>
+                        <option value="flashcards">Flashcards</option>
+                        <option value="mindmaps">Mind Map</option>
+                        <option value="history">History</option>
+                    </select>
+                </div>
             </div>
 
             {/* Main Content Area */}
@@ -207,10 +198,9 @@ function LecturePreparationTab() {
 
                 {/* 1. Upload & Generate Tab */}
                 <div className={getTabClass('upload')}>
-                    <div className="max-w-2xl mx-auto space-y-8">
+                    <div className="w-full space-y-8">
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900 mb-2">Prepare Lecture</h2>
-                            <p className="text-gray-600">Upload materials OR enter a topic to generate everything at once.</p>
                         </div>
 
                         {/* Option A: File Upload */}
@@ -228,18 +218,18 @@ function LecturePreparationTab() {
                         {/* Option B: Topic */}
                         <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
                             <h3 className="font-semibold text-gray-700 mb-4">Option B: Generate from Topic</h3>
-                            <div className="flex gap-3">
+                            <div className="flex flex-col sm:flex-row gap-3">
                                 <input
                                     type="text"
                                     value={topic}
                                     onChange={(e) => setTopic(e.target.value)}
                                     placeholder="Enter a topic (e.g., Photosynthesis)"
-                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none w-full"
                                 />
                                 <button
                                     onClick={() => handleGlobalGenerate()}
                                     disabled={!topic || Object.values(loadingStates).some(Boolean)}
-                                    className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap"
                                 >
                                     {Object.values(loadingStates).some(Boolean) ? <Loader className="animate-spin" size={18} /> : <Zap size={18} />}
                                     Generate All

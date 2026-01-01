@@ -9,16 +9,16 @@ import questionService from '../services/questionService';
 import teacherService from '../services/teacherService';
 import { useProfile } from '../App';
 
-const PaperView = ({ onBack }) => {
+const PaperView = ({ onBack, initialDetails }) => {
   const { paperQuestions, removeFromPaper, clearPaper, getTotalMarks, reorderQuestions, updateQuestionMarks } = usePaper();
   const { profile } = useProfile();
   const [isSaving, setIsSaving] = useState(false);
 
   // Paper Metadata State
   const [paperDetails, setPaperDetails] = useState({
-    title: '',
-    duration: '', // Changed default to empty as requested
-    instructions: 'All questions are compulsory.' // Changed default as requested
+    title: initialDetails?.title || '',
+    duration: initialDetails?.duration_minutes || '',
+    instructions: initialDetails?.instructions || 'All questions are compulsory.'
   });
 
   const sensors = useSensors(

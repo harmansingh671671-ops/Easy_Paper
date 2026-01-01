@@ -50,6 +50,17 @@ const questionService = {
     }
   },
 
+  // Get multiple questions by IDs
+  getQuestionsByIds: async (ids) => {
+    try {
+      const response = await api.post('/questions/bulk', ids);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching bulk questions:', error);
+      throw error;
+    }
+  },
+
   // Create new question
   createQuestion: async (questionData) => {
     try {

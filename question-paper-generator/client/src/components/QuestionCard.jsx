@@ -54,13 +54,13 @@ const QuestionCard = ({ question, onToggleStar, onDelete }) => {
       <div className="flex items-start justify-between mb-4">
 
         <div className="flex gap-2 flex-wrap">
-          <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-semibold">
+          <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full text-xs font-semibold">
             {question.subject}
           </span>
-          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getTypeColor(question.question_type)}`}>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getTypeColor(question.question_type)}`}>
             {question.question_type}
           </span>
-          <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
+          <span className="px-2 py-0.5 bg-gray-100 text-gray-800 rounded-full text-xs">
             {(() => {
               const grade = question.class_grade;
               if (!grade) return 'Grade N/A';
@@ -100,16 +100,16 @@ const QuestionCard = ({ question, onToggleStar, onDelete }) => {
               return grade;
             })()}
           </span>
-          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getDifficultyColor(question.difficulty)}`}>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getDifficultyColor(question.difficulty)}`}>
             {question.difficulty}
           </span>
           {question.source && (
-            <span className="px-3 py-1 bg-cyan-100 text-cyan-800 rounded-full text-xs">
+            <span className="px-2 py-0.5 bg-cyan-100 text-cyan-800 rounded-full text-[10px]">
               📚 {question.source}
             </span>
           )}
         </div>
-        <span className="text-sm font-bold text-gray-700 whitespace-nowrap ml-2">
+        <span className="text-xs font-bold text-gray-700 whitespace-nowrap ml-2">
           {question.marks} {question.marks === 1 ? 'mark' : 'marks'}
         </span>
       </div>

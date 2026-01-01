@@ -14,13 +14,20 @@ import TeacherPaperCreator from '../components/TeacherPaperCreator';
 import teacherService from '../services/teacherService';
 import ProfileModal from '../components/ProfileModal';
 
+import PaperView from './PaperView';
+import questionService from '../services/questionService';
+import { usePaper } from '../contexts/PaperContext';
+
 function TeacherDashboard() {
   const { user } = useAuth();
   const { profile } = useProfile();
+  const { setQuestions } = usePaper();
   const [activeTab, setActiveTab] = useState('library');
   const [viewState, setViewState] = useState('list'); // 'list' or 'create_paper'
   const [papers, setPapers] = useState([]);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [viewingPaper, setViewingPaper] = useState(null); // Paper object being viewed
+  const [loadingPaperId, setLoadingPaperId] = useState(null);
 
   // Fetch papers when tab is active
   useEffect(() => {
@@ -42,6 +49,49 @@ function TeacherDashboard() {
     school: 'School',
     competition: 'Competition Exams'
   };
+
+  const handleOpenPaper = async (paper) => {
+    try {
+      setLoadingPaperId(paper.id);
+      // 1. Get IDs from paper questions
+      // paper.questions is likely [{id: "...", marks: 5}, ...]
+      const ids = paper.questions.map(q => q.id);
+
+      // 2. Fetch full questions
+      const fetchedQuestions = await questionService.getQuestionsByIds(ids);
+
+      // 3. Merge marks and preserve order
+      const questionsWithMarks = paper.questions.map(pq => {
+        const fullQ = fetchedQuestions.find(fq => fq.id === pq.id);
+        if (!fullQ) return null;
+        return { ...fullQ, marks: pq.marks };
+      }).filter(Boolean);
+
+      // 4. Update Context
+      setQuestions(questionsWithMarks);
+
+      // 5. Set View
+      setViewingPaper(paper);
+
+    } catch (error) {
+      console.error("Failed to open paper:", error);
+      alert("Failed to load paper details.");
+    } finally {
+      setLoadingPaperId(null);
+    }
+  };
+
+  if (viewingPaper) {
+    return (
+      <PaperView
+        onBack={() => {
+          setViewingPaper(null);
+          setActiveTab('library');
+        }}
+        initialDetails={viewingPaper}
+      />
+    );
+  }
 
   if (viewState === 'create_paper') {
     return (
@@ -70,7 +120,6 @@ function TeacherDashboard() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">{user?.email}</span>
               <button
                 onClick={() => setIsProfileOpen(true)}
                 className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-200 transition-colors"
@@ -139,9 +188,18 @@ function TeacherDashboard() {
                             {paper.questions?.length || 0} Questions • {paper.total_marks} Marks
                           </p>
                         </div>
-                        <span className="text-xs text-gray-400">
-                          {new Date(paper.created_at).toLocaleDateString()}
-                        </span>
+                        <div className="flex flex-col gap-2 items-end">
+                          <span className="text-xs text-gray-400">
+                            {new Date(paper.created_at).toLocaleDateString()}
+                          </span>
+                          <button
+                            onClick={() => handleOpenPaper(paper)}
+                            disabled={loadingPaperId === paper.id}
+                            className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-md text-sm font-medium hover:bg-indigo-100 transition-colors"
+                          >
+                            {loadingPaperId === paper.id ? 'Loading...' : 'View / Edit'}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}

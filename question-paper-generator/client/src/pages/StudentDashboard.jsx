@@ -8,7 +8,7 @@ import {
   User
 } from 'lucide-react';
 import QuestionLibrary from '../components/QuestionLibrary';
-import RevisionTab from '../components/RevisionTab';
+import LecturePreparationTab from '../components/LecturePreparationTab';
 import ProfileModal from '../components/ProfileModal';
 
 function StudentDashboard() {
@@ -42,33 +42,6 @@ function StudentDashboard() {
             </div>
 
             <div className="flex items-center gap-4">
-              {/* Center Tabs for cleaner look */}
-              <div className="hidden md:flex bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setActiveTab('practice')}
-                  className={`flex items-center gap-2 px-6 py-2 rounded-md font-medium transition-all ${activeTab === 'practice'
-                    ? 'bg-white text-indigo-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                  <BookOpen size={18} />
-                  Practice Question
-                </button>
-                <button
-                  onClick={() => setActiveTab('revision')}
-                  className={`flex items-center gap-2 px-6 py-2 rounded-md font-medium transition-all ${activeTab === 'revision'
-                    ? 'bg-white text-indigo-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                  <Brain size={18} />
-                  Revision & AI
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <span className="hidden sm:inline text-sm text-gray-600">{user?.email}</span>
               <button
                 onClick={() => setIsProfileOpen(true)}
                 className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-200 transition-colors"
@@ -81,21 +54,48 @@ function StudentDashboard() {
         </div>
       </header>
 
-      {/* Content Area */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
-        {activeTab === 'practice' && (
-          <div className="bg-white rounded-lg shadow-sm p-6 h-[calc(100vh-140px)] overflow-hidden flex flex-col">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex-shrink-0">Question Bank Practice</h2>
-            <div className="flex-1 overflow-y-auto">
-              <QuestionLibrary showCreateButton={true} />
-            </div>
+      {/* Navigation Tabs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="bg-white rounded-lg shadow-sm p-1 mb-6">
+          <div className="flex space-x-1 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab('practice')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors whitespace-nowrap ${activeTab === 'practice'
+                ? 'bg-indigo-600 text-white'
+                : 'text-gray-700 hover:bg-gray-100'
+                }`}
+            >
+              <BookOpen size={20} />
+              <span className="hidden sm:inline">Practice Question</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('revision')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors whitespace-nowrap ${activeTab === 'revision'
+                ? 'bg-indigo-600 text-white'
+                : 'text-gray-700 hover:bg-gray-100'
+                }`}
+            >
+              <Brain size={20} />
+              <span className="hidden sm:inline">Revision & AI</span>
+            </button>
           </div>
-        )}
+        </div>
 
-        {activeTab === 'revision' && (
-          <RevisionTab />
-        )}
-      </main>
+        {/* Content Area */}
+        <div className="bg-white rounded-lg shadow-sm p-6 min-h-[500px]">
+          {activeTab === 'practice' && (
+            <div className="h-full flex flex-col">
+              <div className="flex-1">
+                <QuestionLibrary showCreateButton={true} title="Question Bank Practice" />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'revision' && (
+            <LecturePreparationTab />
+          )}
+        </div>
+      </div>
 
       <ProfileModal
         isOpen={isProfileOpen}

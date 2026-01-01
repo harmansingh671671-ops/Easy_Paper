@@ -133,6 +133,18 @@ class QuestionService:
         if response.data:
             return response.data[0]
         return None
+
+    async def get_questions_by_ids(self, question_ids: List[UUID]) -> List[dict]:
+        """Get multiple questions by their IDs"""
+        if not question_ids:
+            return []
+            
+        response = self.supabase.table(self.table)\
+            .select("*")\
+            .in_("id", [str(qid) for qid in question_ids])\
+            .execute()
+            
+        return response.data
     
     async def create_question(self, question: QuestionCreate) -> dict:
         """Create a new question"""

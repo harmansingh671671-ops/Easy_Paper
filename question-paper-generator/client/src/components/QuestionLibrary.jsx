@@ -3,16 +3,17 @@ import { useProfile } from '../App';
 import questionService from '../services/questionService';
 import FilterPanel from './FilterPanel';
 import QuestionCard from './QuestionCard';
-import CreateQuestionModal from './CreateQuestionModal';
+import { Filter } from 'lucide-react';
 import { usePaper } from '../contexts/PaperContext';
 import PaperView from '../pages/PaperView';
 
-function QuestionLibrary({ showCreateButton = true, enableSelection = false, selectedIds = [], onToggleSelection }) {
+function QuestionLibrary({ showCreateButton = true, enableSelection = false, selectedIds = [], onToggleSelection, title }) {
   const { profile: user, loading: profileLoading } = useProfile();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentView, setCurrentView] = useState('library'); // 'library' or 'paper'
+  const [showFilters, setShowFilters] = useState(false); // New state for filter visibility
   const [filters, setFilters] = useState({
     subject: '',
     class_grade: '',
@@ -28,7 +29,6 @@ function QuestionLibrary({ showCreateButton = true, enableSelection = false, sel
     exam: user?.role === 'student' && user?.target_exam ? user.target_exam : '',
   });
   const [totalQuestions, setTotalQuestions] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { paperQuestions, getTotalMarks } = usePaper();
 
@@ -153,11 +153,6 @@ function QuestionLibrary({ showCreateButton = true, enableSelection = false, sel
     }
   };
 
-  const handleQuestionCreated = (newQuestion) => {
-    setTotalQuestions(prev => prev + 1);
-    setQuestions(prev => [newQuestion, ...prev]);
-  };
-
   const handleDeleteQuestion = async (questionId) => {
     try {
       await questionService.deleteQuestion(questionId);
@@ -177,46 +172,82 @@ function QuestionLibrary({ showCreateButton = true, enableSelection = false, sel
 
   return (
     <div>
-      {/* Paper Summary Bar - Only show if selection is NOT enabled (default view) */}
+      {/* Paper Summary Bar ... */}
       {!enableSelection && paperQuestions.length > 0 && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-6">
+        // ... existing summary bar code ...
+        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 mb-4 flex items-center justify-between sticky top-20 z-10 shadow-sm">
+          <div className="flex items-center gap-4">
             <div>
-              <p className="text-sm text-gray-600">Questions in Paper</p>
-              <p className="text-2xl font-bold text-indigo-600">
+              <p className="text-xs text-gray-600">Questions</p>
+              <p className="text-lg font-bold text-indigo-600">
                 {paperQuestions.length}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total Marks</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-xs text-gray-600">Marks</p>
+              <p className="text-lg font-bold text-green-600">
                 {getTotalMarks()}
               </p>
             </div>
           </div>
           <button
             onClick={() => setCurrentView('paper')}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold"
+            className="px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-semibold"
           >
             View Paper
           </button>
         </div>
       )}
 
-      {/* Filters */}
-      <FilterPanel
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onClearFilters={handleClearFilters}
-        openCreateModal={showCreateButton ? () => setIsModalOpen(true) : undefined}
-      />
+      {/* Header Row: Title & Filter Toggle */}
+      <div className={`mb-4 flex items-center ${title ? 'justify-between' : 'justify-end'}`}>
+        {title && (
+          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+        )}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium shadow-sm"
+        >
+          <Filter size={18} />
+          Filters
+        </button>
+      </div>
 
-      {/* Info about category filtering */}
-      {user?.category && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-          Showing questions for: <strong>{user.category.charAt(0).toUpperCase() + user.category.slice(1)}</strong>
+      {/* Filter Modal */}
+      {showFilters && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
+              <h3 className="text-lg font-bold text-gray-900">Filters</h3>
+              <button
+                onClick={() => setShowFilters(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                aria-label="Close filters"
+              >
+                <div className="w-5 h-5 text-gray-500">✕</div>
+              </button>
+            </div>
+            <div className="p-6">
+              <FilterPanel
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                onClearFilters={handleClearFilters}
+                openCreateModal={undefined}
+              />
+            </div>
+            <div className="border-t p-4 flex justify-end sticky bottom-0 bg-gray-50 rounded-b-xl">
+              <button
+                onClick={() => setShowFilters(false)}
+                className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
         </div>
       )}
+
+
 
       {/* Loading State */}
       {loading && (
@@ -271,11 +302,7 @@ function QuestionLibrary({ showCreateButton = true, enableSelection = false, sel
         </>
       )}
 
-      <CreateQuestionModal
-        isOpen={isModalOpen}
-        onRequestClose={() => setIsModalOpen(false)}
-        onQuestionCreated={handleQuestionCreated}
-      />
+
     </div>
   );
 }

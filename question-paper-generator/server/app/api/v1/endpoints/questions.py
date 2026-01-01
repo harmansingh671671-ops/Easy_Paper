@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Body
 from typing import List, Optional
 from uuid import UUID
 from fastapi.responses import StreamingResponse
@@ -137,6 +137,15 @@ async def toggle_star_question(
         raise HTTPException(status_code=404, detail="Question not found")
     
     return Question(**question_data)
+
+@router.post("/bulk", response_model=List[Question])
+async def get_questions_bulk(
+    question_ids: List[UUID] = Body(...),
+    service: QuestionService = Depends(get_question_service)
+):
+    """Get multiple questions by their IDs"""
+    questions_data = await service.get_questions_by_ids(question_ids)
+    return [Question(**q) for q in questions_data]
 
 @router.post("/", response_model=Question, status_code=201)
 async def create_question(

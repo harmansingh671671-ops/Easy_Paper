@@ -10,7 +10,7 @@ export const usePaper = () => {
   }
   return context;
 };
-  
+
 export const PaperProvider = ({ children }) => {
   const [paperQuestions, setPaperQuestions] = useState([]);
   const reorderQuestions = (startIndex, endIndex) => {
@@ -25,7 +25,7 @@ export const PaperProvider = ({ children }) => {
       alert('Question already in Paper!');
       return;
     }
-    
+
     setPaperQuestions([...paperQuestions, question]);
   };
 
@@ -48,7 +48,7 @@ export const PaperProvider = ({ children }) => {
   const updateQuestionMarks = async (questionId, newMarks) => {
     try {
       // Optimistically update the UI
-      const updatedQuestions = paperQuestions.map(q => 
+      const updatedQuestions = paperQuestions.map(q =>
         q.id === questionId ? { ...q, marks: newMarks } : q
       );
       setPaperQuestions(updatedQuestions);
@@ -66,6 +66,8 @@ export const PaperProvider = ({ children }) => {
     <PaperContext.Provider
       value={{
         paperQuestions,
+        setQuestions: setPaperQuestions,
+        addToPaper,
         addToPaper,
         removeFromPaper,
         clearPaper,
