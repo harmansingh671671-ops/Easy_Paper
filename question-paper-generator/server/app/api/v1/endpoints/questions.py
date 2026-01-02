@@ -69,7 +69,13 @@ async def get_questions(
     )
     
     # Get questions
-    questions_data, total = await service.get_all_questions(filters, page, page_size)
+    try:
+        questions_data, total = await service.get_all_questions(filters, page, page_size)
+    except Exception as e:
+        import traceback
+        print(f"Error fetching questions: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
     
     # Convert to Pydantic models
     questions = [Question(**q) for q in questions_data]

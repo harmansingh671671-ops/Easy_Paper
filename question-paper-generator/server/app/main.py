@@ -24,6 +24,10 @@ if "http://localhost:5173" not in allow_origins:
 if "http://127.0.0.1:5173" not in allow_origins:
     allow_origins.append("http://127.0.0.1:5173")
 
+# Add Vercel frontend
+if "https://budyforstudy.vercel.app" not in allow_origins:
+    allow_origins.append("https://budyforstudy.vercel.app")
+
 allow_credentials = True
 
 app.add_middleware(
