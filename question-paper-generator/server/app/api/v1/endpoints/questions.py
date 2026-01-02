@@ -35,6 +35,7 @@ async def get_questions(
     is_starred: Optional[bool] = None,
     search: Optional[str] = None,
     category: Optional[str] = None,
+    source: Optional[str] = None,
     grade: Optional[List[str]] = Query(None),
     year: Optional[List[str]] = Query(None),
     exam: Optional[List[str]] = Query(None),
@@ -52,6 +53,7 @@ async def get_questions(
     - **question_type**: Filter by type (MCQ, LONG, TRUE_FALSE, FILL_BLANK)
     - **is_starred**: Filter by starred status
     - **search**: Search in question text
+    - **source**: Filter by source
     """
     # Create filter object
     filters = QuestionFilter(
@@ -63,6 +65,7 @@ async def get_questions(
         is_starred=is_starred,
         search=search,
         category=category,
+        source=source,
         grade=grade,
         year=year,
         exam=exam

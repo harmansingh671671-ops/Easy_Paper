@@ -98,6 +98,7 @@ class QuestionFilter(BaseModel):
     grade: Optional[List[str]] = None
     year: Optional[List[str]] = None
     exam: Optional[List[str]] = None
+    source: Optional[str] = None
 
 # List Response Model (for paginated results)
 class QuestionListResponse(BaseModel):
