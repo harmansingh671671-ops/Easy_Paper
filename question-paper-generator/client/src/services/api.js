@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
   headers: {
-    'Content-Type': 'application/json',
+    // 'Content-Type': 'application/json', // Remove default to allow FormData to set multipart/form-data
   },
 });
 
@@ -37,7 +37,9 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error('API Error:', error.response?.data || error.message);
+    if (error.code !== 'ERR_CANCELED') {
+      console.error('API Error:', error.response?.data || error.message);
+    }
     return Promise.reject(error);
   }
 );

@@ -70,6 +70,18 @@ function PdfUpload({ onProcessed, onStatusChange, topic: initialTopic = '' }) {
       setLoading(false); // Stream done
       if (onStatusChange) onStatusChange('notes', false);
 
+      // Define consistent topic for all content types
+      const finalTopic = topic || file.name;
+
+      // Save the generated notes to DB
+      try {
+        console.log("Saving generated notes to DB...");
+        await aiService.saveNotes(accumulatedNotes, finalTopic);
+        console.log("Notes saved successfully.");
+      } catch (saveErr) {
+        console.error("Failed to auto-save notes:", saveErr);
+      }
+
       // Prepare the master data object to send to parent
       const finalResult = {
         notes: accumulatedNotes,
@@ -90,7 +102,8 @@ function PdfUpload({ onProcessed, onStatusChange, topic: initialTopic = '' }) {
         // 1. Generate Quiz
         if (onStatusChange) onStatusChange('quizzes', true);
         console.log("Starting Quiz Generation...");
-        const quizRes = await aiService.generateQuiz(contextForNext, 10, 'mixed');
+        // Pass finalTopic to ensure grouped saving
+        const quizRes = await aiService.generateQuiz(contextForNext, 10, 'mixed', finalTopic);
         setResult(prev => ({ ...prev, quiz: quizRes.questions }));
         if (onStatusChange) onStatusChange('quizzes', false);
 
@@ -100,7 +113,7 @@ function PdfUpload({ onProcessed, onStatusChange, topic: initialTopic = '' }) {
         // 2. Generate Mind Map
         if (onStatusChange) onStatusChange('mindmaps', true);
         console.log("Starting Mind Map Generation...");
-        const mmRes = await aiService.generateMindMap(contextForNext, topic || undefined);
+        const mmRes = await aiService.generateMindMap(contextForNext, finalTopic);
         setResult(prev => ({ ...prev, mindmap: mmRes.mindmap }));
         if (onStatusChange) onStatusChange('mindmaps', false);
 
@@ -109,7 +122,7 @@ function PdfUpload({ onProcessed, onStatusChange, topic: initialTopic = '' }) {
 
         // 3. Generate Flashcards
         console.log("Starting Flashcard Generation...");
-        const fcRes = await aiService.generateFlashcards(contextForNext, 10);
+        const fcRes = await aiService.generateFlashcards(contextForNext, 10, finalTopic);
         setResult(prev => ({ ...prev, flashcards: fcRes.flashcards }));
 
         finalResult.flashcards = fcRes.flashcards;

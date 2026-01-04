@@ -82,9 +82,9 @@ function RevisionTab() {
         try {
             const [notesRes, quizRes, mindMapRes, flashcardsRes] = await Promise.allSettled([
                 aiService.generateNotes([], topicToUse),
-                aiService.generateQuiz([], 5, "mixed"),
+                aiService.generateQuiz([], 5, "mixed", topicToUse),
                 aiService.generateMindMap([], topicToUse),
-                aiService.generateFlashcards([], 10)
+                aiService.generateFlashcards([], 10, topicToUse)
             ]);
 
             setGeneratedContent(prev => ({
@@ -139,13 +139,13 @@ function RevisionTab() {
                     filename: source === 'file' ? inputData.name : prev.filename
                 }));
             } else if (type === 'quizzes') {
-                const res = await aiService.generateQuiz(contentToUse, 5, "mixed");
+                const res = await aiService.generateQuiz(contentToUse, 5, "mixed", topicToUse);
                 setGeneratedContent(prev => ({ ...prev, quizzes: res.questions || res }));
             } else if (type === 'mindmaps') {
                 const res = await aiService.generateMindMap(contentToUse, topicToUse);
                 setGeneratedContent(prev => ({ ...prev, mindmap: res.mindmap || res }));
             } else if (type === 'flashcards') {
-                const res = await aiService.generateFlashcards(contentToUse, 10);
+                const res = await aiService.generateFlashcards(contentToUse, 10, topicToUse);
                 setGeneratedContent(prev => ({ ...prev, flashcards: res.flashcards || res }));
             }
         } catch (e) {
@@ -266,22 +266,56 @@ function RevisionTab() {
                             </div>
                         ) : (
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                {history.map((item, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => handleGlobalGenerate(item.topic)}
-                                        className="text-left p-4 rounded-xl bg-white border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all group relative overflow-hidden"
-                                    >
-                                        <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Zap size={16} className="text-indigo-500" />
-                                        </div>
-                                        <div className="font-semibold text-gray-800 mb-1 line-clamp-1">{item.topic}</div>
-                                        <div className="text-xs text-gray-500 flex items-center gap-1">
-                                            <Clock size={12} />
-                                            {new Date(item.date).toLocaleDateString()}
-                                        </div>
-                                    </button>
-                                ))}
+                                {history.map((item, idx) => {
+                                    // Determine Icon based on types
+                                    let Icon = FileText; // Default
+                                    let iconColor = "text-gray-500";
+
+                                    const types = item.types || [];
+                                    const hasNotes = types.includes('notes');
+                                    const hasQuiz = types.includes('quizzes');
+                                    const hasFlash = types.includes('flashcards');
+                                    const hasMind = types.includes('mindmaps');
+
+                                    const allGenerated = hasNotes && hasQuiz && hasFlash && hasMind;
+
+                                    if (allGenerated) {
+                                        Icon = Zap;
+                                        iconColor = "text-yellow-500 fill-yellow-50";
+                                    } else if (hasQuiz && !hasNotes) {
+                                        Icon = Zap;
+                                        iconColor = "text-indigo-500";
+                                    } else if (hasFlash && !hasNotes) {
+                                        Icon = CreditCard;
+                                        iconColor = "text-purple-500";
+                                    } else if (hasMind && !hasNotes) {
+                                        Icon = Brain;
+                                        iconColor = "text-pink-500";
+                                    } else {
+                                        Icon = FileText;
+                                        iconColor = "text-blue-500";
+                                    }
+
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => handleGlobalGenerate(item.topic)}
+                                            className="text-left p-4 rounded-xl bg-white border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all group relative overflow-hidden"
+                                        >
+                                            <div className="absolute top-3 right-3">
+                                                <Icon size={20} className={iconColor} />
+                                            </div>
+                                            <div className="font-semibold text-gray-800 mb-1 line-clamp-1 pr-8">{item.topic}</div>
+                                            <div className="text-xs text-gray-500 flex items-center gap-1">
+                                                <Clock size={12} />
+                                                {new Date(item.date).toLocaleDateString()}
+                                                <span className="ml-2 text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-400">
+                                                    {types.length} items
+                                                </span>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

@@ -2,6 +2,17 @@ import api from './api';
 import { supabase } from '../lib/supabaseClient';
 
 const aiService = {
+  // Get next untitled topic name
+  getNextUntitledTopic: async () => {
+    try {
+      const response = await api.get('/ai/get-next-untitled');
+      return response.data.topic;
+    } catch (error) {
+      console.error('Error fetching untitled topic:', error);
+      return null;
+    }
+  },
+
   // Extract text from PDF
   extractPdfText: async (file) => {
     try {
@@ -20,14 +31,34 @@ const aiService = {
     }
   },
 
+  // Save notes directly (for streaming)
+  saveNotes: async (content, topic) => {
+    try {
+      const formData = new FormData();
+      formData.append('content', content);
+      formData.append('topic', topic);
+
+      const response = await api.post('/ai/save-notes', formData, {
+        headers: {
+          'Content-Type': undefined,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error saving notes:', error);
+      throw error;
+    }
+  },
+
   // Generate notes
-  generateNotes: async (content, topic = null) => {
+  generateNotes: async (content, topic = null, save_topic = null) => {
     try {
       const formData = new FormData();
       // Ensure content is stringified if it's an array (images)
       const contentStr = typeof content === 'object' ? JSON.stringify(content) : content;
       formData.append('content', contentStr);
       if (topic) formData.append('topic', topic);
+      if (save_topic) formData.append('save_topic', save_topic);
 
       const response = await api.post('/ai/generate-notes', formData, {
         headers: {
@@ -42,12 +73,14 @@ const aiService = {
   },
 
   // Generate flashcards
-  generateFlashcards: async (content, numCards = 10) => {
+  generateFlashcards: async (content, numCards = 10, topic = null, save_topic = null) => {
     try {
       const formData = new FormData();
       const contentStr = typeof content === 'object' ? JSON.stringify(content) : content;
       formData.append('content', contentStr);
       formData.append('num_cards', numCards);
+      if (topic) formData.append('topic', topic);
+      if (save_topic) formData.append('save_topic', save_topic);
 
       const response = await api.post('/ai/generate-flashcards', formData, {
         headers: {
@@ -62,13 +95,15 @@ const aiService = {
   },
 
   // Generate quiz
-  generateQuiz: async (content, numQuestions = 10, questionType = 'mixed') => {
+  generateQuiz: async (content, numQuestions = 10, questionType = 'mixed', topic = null, save_topic = null) => {
     try {
       const formData = new FormData();
       const contentStr = typeof content === 'object' ? JSON.stringify(content) : content;
       formData.append('content', contentStr);
       formData.append('num_questions', numQuestions);
       formData.append('question_type', questionType);
+      if (topic) formData.append('topic', topic);
+      if (save_topic) formData.append('save_topic', save_topic);
 
       const response = await api.post('/ai/generate-quiz', formData, {
         headers: {
@@ -83,12 +118,13 @@ const aiService = {
   },
 
   // Generate mind map
-  generateMindMap: async (content, topic = null) => {
+  generateMindMap: async (content, topic = null, save_topic = null) => {
     try {
       const formData = new FormData();
       const contentStr = typeof content === 'object' ? JSON.stringify(content) : content;
       formData.append('content', contentStr);
       if (topic) formData.append('topic', topic);
+      if (save_topic) formData.append('save_topic', save_topic);
 
       const response = await api.post('/ai/generate-mindmap', formData, {
         headers: {
@@ -111,6 +147,19 @@ const aiService = {
       console.error('Error fetching history:', error);
       // Return empty array on error to allow graceful degradation
       return [];
+    }
+  },
+
+  // Get full content for a specific history topic
+  getTopicContent: async (topic) => {
+    try {
+      const response = await api.get('/history/content', {
+        params: { topic }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching topic content:', error);
+      throw error;
     }
   },
 

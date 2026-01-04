@@ -59,18 +59,27 @@ function LecturePreparationTab() {
             filename: data.filename || prev.filename
         }));
 
-        if (data.notes && activeSubTab === 'upload') setActiveSubTab('notes');
+
     };
 
     const handleGlobalGenerate = async (overrideTopic) => {
-        const topicToUse = overrideTopic || topic || generatedContent.filename;
-        if (!topicToUse) return;
+        // Determine topic for generation (AI context)
+        let topicToUse = overrideTopic || topic || generatedContent.filename;
+        let saveTopic = null;
 
         if (overrideTopic) setTopic(overrideTopic);
 
-        // Use topic state if override not provided
-        const finalTopic = overrideTopic || topic || generatedContent.filename;
-        if (!finalTopic) return;
+        // If no topic provided, we are in Auto-Detect mode. 
+        // We need to reserve a consistent "Untitled(i)" name for all requests.
+        if (!topicToUse) {
+            try {
+                saveTopic = await aiService.getNextUntitledTopic();
+                console.log("Auto-Detect Mode: Reserved topic name:", saveTopic);
+            } catch (error) {
+                console.error("Failed to reserve untitled topic:", error);
+                return;
+            }
+        }
 
         setLoadingStates({
             notes: true,
@@ -81,11 +90,13 @@ function LecturePreparationTab() {
 
         try {
             const [notesRes, quizRes, mindMapRes, flashcardsRes] = await Promise.allSettled([
-                aiService.generateShortNotes([], topicToUse),
-                aiService.generateQuiz([], 5, "mixed"),
-                aiService.generateMindMap([], topicToUse),
-                aiService.generateFlashcards([], 10)
+                aiService.generateNotes([], topicToUse, saveTopic),
+                aiService.generateQuiz([], 5, "mixed", topicToUse, saveTopic),
+                aiService.generateMindMap([], topicToUse, saveTopic),
+                aiService.generateFlashcards([], 10, topicToUse, saveTopic)
             ]);
+
+            const finalDisplayName = saveTopic || topicToUse || generatedContent.filename;
 
             setGeneratedContent(prev => ({
                 ...prev,
@@ -93,7 +104,7 @@ function LecturePreparationTab() {
                 quizzes: quizRes.status === 'fulfilled' ? (quizRes.value.questions || quizRes.value) : prev.quizzes,
                 mindmap: mindMapRes.status === 'fulfilled' ? (mindMapRes.value.mindmap || mindMapRes.value) : prev.mindmap,
                 flashcards: flashcardsRes.status === 'fulfilled' ? (flashcardsRes.value.flashcards || flashcardsRes.value) : prev.flashcards,
-                filename: prev.filename || topicToUse
+                filename: finalDisplayName
             }));
 
         } catch (error) {
@@ -105,7 +116,7 @@ function LecturePreparationTab() {
                 mindmaps: false,
                 flashcards: false
             });
-            setActiveSubTab('notes');
+
         }
     };
 
@@ -132,20 +143,20 @@ function LecturePreparationTab() {
             }
 
             if (type === 'notes') {
-                const res = await aiService.generateShortNotes(contentToUse, topicToUse);
+                const res = await aiService.generateNotes(contentToUse, topicToUse);
                 setGeneratedContent(prev => ({
                     ...prev,
                     notes: res.notes || res,
                     filename: source === 'file' ? inputData.name : prev.filename
                 }));
             } else if (type === 'quizzes') {
-                const res = await aiService.generateQuiz(contentToUse, 5, "mixed");
+                const res = await aiService.generateQuiz(contentToUse, 5, "mixed", topicToUse);
                 setGeneratedContent(prev => ({ ...prev, quizzes: res.questions || res }));
             } else if (type === 'mindmaps') {
                 const res = await aiService.generateMindMap(contentToUse, topicToUse);
                 setGeneratedContent(prev => ({ ...prev, mindmap: res.mindmap || res }));
             } else if (type === 'flashcards') {
-                const res = await aiService.generateFlashcards(contentToUse, 10);
+                const res = await aiService.generateFlashcards(contentToUse, 10, topicToUse);
                 setGeneratedContent(prev => ({ ...prev, flashcards: res.flashcards || res }));
             }
         } catch (e) {
@@ -157,9 +168,17 @@ function LecturePreparationTab() {
     };
 
     const handleGenerateMoreQuiz = async () => {
-        if (!generatedContent.notes) return;
+        const contentToUse = generatedContent.notes || [];
+        const topicToUse = topic || generatedContent.filename;
+
+        // Validation: Need at least content OR a topic
+        if ((!contentToUse || contentToUse.length === 0) && !topicToUse) {
+            console.warn("Cannot generate more quiz questions: No content and no topic available.");
+            return;
+        }
+
         try {
-            const newQuestions = await aiService.generateQuiz(generatedContent.notes, 5, 'mixed');
+            const newQuestions = await aiService.generateQuiz(contentToUse, 5, 'mixed', topicToUse);
             setGeneratedContent(prev => ({
                 ...prev,
                 quizzes: [...(prev.quizzes || []), ...newQuestions]
@@ -169,14 +188,47 @@ function LecturePreparationTab() {
         }
     };
 
+    const handleLoadHistory = async (historyTopic) => {
+        setLoadingStates({
+            notes: true,
+            quizzes: true,
+            mindmaps: true,
+            flashcards: true
+        });
+
+        try {
+            const data = await aiService.getTopicContent(historyTopic);
+
+            setGeneratedContent({
+                notes: data.notes,
+                quizzes: data.quizzes,
+                mindmap: data.mindmap,
+                flashcards: data.flashcards,
+                filename: data.topic
+            });
+
+
+        } catch (error) {
+            console.error("Failed to load history content:", error);
+            alert("Failed to load history. Please try again.");
+        } finally {
+            setLoadingStates({
+                notes: false,
+                quizzes: false,
+                mindmaps: false,
+                flashcards: false
+            });
+        }
+    };
+
     const getTabClass = (tabName) => {
         return activeSubTab === tabName ? "block h-full" : "hidden";
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-140px)] bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="flex flex-col bg-white rounded-lg shadow-sm">
             {/* Center Toolbar (Dropdown) */}
-            <div className="flex justify-center border-b border-gray-200 bg-gray-50/50 px-6 py-2 sticky top-0 z-10">
+            <div className="flex justify-center border-b border-gray-200 bg-gray-50/50 px-6 py-2 sticky top-20 z-10 bg-white">
                 <div className="relative inline-block text-left w-full max-w-xs">
                     <select
                         value={activeSubTab}
@@ -194,7 +246,7 @@ function LecturePreparationTab() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 overflow-y-auto p-6 relative">
+            <div className="flex-1 p-6 relative">
 
                 {/* 1. Upload & Generate Tab */}
                 <div className={getTabClass('upload')}>
@@ -256,28 +308,65 @@ function LecturePreparationTab() {
                             </div>
                         ) : (
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                {history.map((item, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => handleGlobalGenerate(item.topic)}
-                                        className="text-left p-4 rounded-xl bg-white border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all group relative overflow-hidden"
-                                    >
-                                        <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Zap size={16} className="text-indigo-500" />
-                                        </div>
-                                        <div className="font-semibold text-gray-800 mb-1 line-clamp-1">{item.topic}</div>
-                                        <div className="text-xs text-gray-500 flex items-center gap-1">
-                                            <Clock size={12} />
-                                            {new Date(item.date).toLocaleDateString()}
-                                        </div>
-                                    </button>
-                                ))}
+                                {history.map((item, idx) => {
+                                    // Determine Icon based on types
+                                    let Icon = FileText; // Default
+                                    let iconColor = "text-gray-500";
+
+                                    const types = item.types || [];
+                                    const hasNotes = types.includes('notes');
+                                    const hasQuiz = types.includes('quizzes');
+                                    const hasFlash = types.includes('flashcards');
+                                    const hasMind = types.includes('mindmaps');
+
+                                    const allGenerated = hasNotes && hasQuiz && hasFlash && hasMind;
+
+                                    if (allGenerated) {
+                                        Icon = Zap;
+                                        iconColor = "text-yellow-500 fill-yellow-50";
+                                    } else if (hasQuiz && !hasNotes) {
+                                        Icon = Zap; // "Electric" symbol provided as requested for quiz too? Or specifically generic? 
+                                        // User: "display only the icon of the respective content".
+                                        // If just Quiz -> Zap (as used in tab).
+                                        iconColor = "text-indigo-500";
+                                    } else if (hasFlash && !hasNotes) {
+                                        Icon = CreditCard;
+                                        iconColor = "text-purple-500";
+                                    } else if (hasMind && !hasNotes) {
+                                        Icon = Brain;
+                                        iconColor = "text-pink-500";
+                                    } else {
+                                        // Default to Notes icon or if mixed includes notes
+                                        Icon = FileText;
+                                        iconColor = "text-blue-500";
+                                    }
+
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => handleLoadHistory(item.topic)}
+                                            className="text-left p-4 rounded-xl bg-white border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all group relative overflow-hidden"
+                                        >
+                                            <div className="absolute top-3 right-3">
+                                                <Icon size={20} className={iconColor} />
+                                            </div>
+                                            <div className="font-semibold text-gray-800 mb-1 line-clamp-1 pr-8">{item.topic}</div>
+                                            <div className="text-xs text-gray-500 flex items-center gap-1">
+                                                <Clock size={12} />
+                                                {new Date(item.date).toLocaleDateString()}
+                                                <span className="ml-2 text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-400">
+                                                    {types.length} items
+                                                </span>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* 2. Notes Tab */}
+                {/* 3. Notes Tab */}
                 <div className={getTabClass('notes')}>
                     <div className="max-w-4xl mx-auto h-full">
                         {loadingStates.notes && !generatedContent.notes ? (
@@ -304,10 +393,10 @@ function LecturePreparationTab() {
                             />
                         )}
                     </div>
-                </div>
+                </div >
 
                 {/* 3. Quizzes Tab */}
-                <div className={getTabClass('quizzes')}>
+                < div className={getTabClass('quizzes')} >
                     <div className="max-w-4xl mx-auto h-full">
                         {loadingStates.quizzes && !generatedContent.quizzes ? (
                             <div className="flex flex-col items-center justify-center h-64 text-gray-500">
@@ -328,10 +417,10 @@ function LecturePreparationTab() {
                             />
                         )}
                     </div>
-                </div>
+                </div >
 
                 {/* 4. Flashcards Tab */}
-                <div className={getTabClass('flashcards')}>
+                < div className={getTabClass('flashcards')} >
                     <div className="max-w-4xl mx-auto h-full">
                         {loadingStates.flashcards && !generatedContent.flashcards ? (
                             <div className="flex flex-col items-center justify-center h-64 text-gray-500">
@@ -352,10 +441,10 @@ function LecturePreparationTab() {
                             />
                         )}
                     </div>
-                </div>
+                </div >
 
                 {/* 5. Mind Maps Tab */}
-                <div className={getTabClass('mindmaps')}>
+                < div className={getTabClass('mindmaps')} >
                     <div className="max-w-4xl mx-auto h-full">
                         {loadingStates.mindmaps && !generatedContent.mindmap ? (
                             <div className="flex flex-col items-center justify-center h-64 text-gray-500">
@@ -378,10 +467,10 @@ function LecturePreparationTab() {
                             />
                         )}
                     </div>
-                </div>
+                </div >
 
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
 

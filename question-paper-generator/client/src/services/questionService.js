@@ -2,7 +2,7 @@ import api from './api';
 
 const questionService = {
   // Get all questions with filters
-  getAllQuestions: async (filters = {}) => {
+  getAllQuestions: async (filters = {}, options = {}) => {
     try {
       const params = new URLSearchParams();
 
@@ -31,10 +31,16 @@ const questionService = {
       appendList('year', filters.year);
       appendList('exam', filters.exam);
 
-      const response = await api.get(`/questions/?${params.toString()}`);
+      // Pass signal if present in options
+      const response = await api.get(`/questions/?${params.toString()}`, {
+        signal: options.signal
+      });
       return response.data;
     } catch (error) {
-      console.error('Error fetching questions:', error);
+      // Don't log canceled errors as they are expected
+      if (error.name !== 'CanceledError' && error.code !== 'ERR_CANCELED') {
+        console.error('Error fetching questions:', error);
+      }
       throw error;
     }
   },

@@ -25,8 +25,44 @@ def get_ai_service() -> AIService:
         logger.error(f"Failed to init AIService: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Helper for Untitled(i) naming
+def get_next_untitled_topic(supabase: Client, user_id: str) -> str:
+    try:
+        # Fetch all topics from ALL tables to ensure global uniqueness and continuity
+        tables = ["lecture_notes", "ai_flashcards", "ai_quizzes", "ai_mindmaps"]
+        existing_topics = []
+        
+        for table in tables:
+             res = supabase.table(table).select("topic").eq("user_id", user_id).ilike("topic", "Untitled%").execute()
+             existing_topics.extend([item['topic'] for item in res.data])
+
+        max_index = 0
+        for t in existing_topics:
+            if t == "Untitled":
+                if max_index < 1: max_index = 1
+            elif t.startswith("Untitled(") and t.endswith(")"):
+                try:
+                    num = int(t[9:-1])
+                    if num > max_index:
+                        max_index = num
+                except:
+                    pass
+        
+        return f"Untitled({max_index + 1})"
+    except Exception as e:
+        logger.error(f"Error determining next Untitled topic: {e}")
+        return f"Untitled-{os.urandom(4).hex()}"
+
 # Simple auth check - verify user is logged in (has Clerk user ID)
 
+
+@router.get("/get-next-untitled")
+async def get_next_untitled_endpoint(
+    user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase)
+):
+    """Get the next available Untitled(i) topic name"""
+    return {"topic": get_next_untitled_topic(supabase, user.id)}
 
 @router.post("/extract-pdf-text")
 async def extract_pdf_text(
@@ -46,36 +82,32 @@ async def extract_pdf_text(
 async def generate_notes(
     content: str = Form(...),
     topic: Optional[str] = Form(None),
+    save_topic: Optional[str] = Form(None),
     user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase)
 ):
     """Generate short notes from content"""
     try:
         user_id = user.id
-        # Check DB if topic provided (and not re-generating explicitly?)
-        # For now, if topic & user match, return existing.
-        # Note: If generating from PDF content without a topic, we usually assign filename as topic.
         
-        search_topic = topic
-        if not search_topic and len(content) < 200: # Heuristic: if content is short, it might be the topic
-             search_topic = content
-
-        if search_topic:
-             existing = supabase.table("lecture_notes").select("*").eq("user_id", user_id).eq("topic", search_topic).execute()
-             if existing.data and len(existing.data) > 0:
-                  logger.info(f"Returning cached notes for topic: {search_topic}")
-                  return {"notes": existing.data[0]['content']}
-
+        # Determine saving topic
+        db_topic_save = save_topic if save_topic else topic
+        
         ai_service = get_ai_service()
+        # Pass original 'topic' (which might be None/Empty) to AI so it runs Auto-Detect if needed
         notes = await ai_service.generate_short_notes(content, topic)
         
         # Store result
-        if search_topic and notes:
+        if notes:
              try:
-                 print(f"DEBUG: Attempting to insert NOTE into DB. User: {user_id}, Topic: {search_topic}")
+                 # If still no topic to save as, calculate one now
+                 if not db_topic_save:
+                    db_topic_save = get_next_untitled_topic(supabase, user_id)
+                 
+                 print(f"DEBUG: Attempting to insert NOTE into DB. User: {user_id}, Topic: {db_topic_save}")
                  data = {
                      "user_id": user_id,
-                     "topic": search_topic,
+                     "topic": db_topic_save,
                      "content": notes
                  }
                  res = supabase.table("lecture_notes").insert(data).execute()
@@ -94,31 +126,27 @@ async def generate_flashcards(
     content: str = Form(...),
     num_cards: int = Form(10),
     topic: Optional[str] = Form(None),
+    save_topic: Optional[str] = Form(None),
     user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase)
 ):
     """Generate flashcards from content"""
     try:
         user_id = user.id
-        search_topic = topic
-        if not search_topic and len(content) < 200:
-             search_topic = content
-        
-        if search_topic:
-             existing = supabase.table("ai_flashcards").select("*").eq("user_id", user_id).eq("topic", search_topic).execute()
-             if existing.data:
-                  logger.info(f"Returning cached flashcards for topic: {search_topic}")
-                  return {"flashcards": existing.data[0]['cards']}
+        db_topic_save = save_topic if save_topic else topic
 
         ai_service = get_ai_service()
-        flashcards = await ai_service.generate_flashcards(content, num_cards)
+        flashcards = await ai_service.generate_flashcards(content, num_cards, topic)
         
-        if search_topic and flashcards:
+        if flashcards:
              try:
-                 print(f"DEBUG: Attempting to insert FLASHCARDS. User: {user_id}, Topic: {search_topic}")
+                 if not db_topic_save:
+                     db_topic_save = get_next_untitled_topic(supabase, user_id)
+
+                 print(f"DEBUG: Attempting to insert FLASHCARDS. User: {user_id}, Topic: {db_topic_save}")
                  supabase.table("ai_flashcards").insert({
                      "user_id": user_id,
-                     "topic": search_topic,
+                     "topic": db_topic_save,
                      "cards": flashcards
                  }).execute()
                  print("DEBUG: Flashcard insert success")
@@ -136,31 +164,27 @@ async def generate_quiz(
     num_questions: int = Form(10),
     question_type: str = Form("mixed"),
     topic: Optional[str] = Form(None),
+    save_topic: Optional[str] = Form(None),
     user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase)
 ):
     """Generate quiz questions from content"""
     try:
         user_id = user.id
-        search_topic = topic
-        if not search_topic and len(content) < 200:
-             search_topic = content
-        
-        if search_topic:
-             existing = supabase.table("ai_quizzes").select("*").eq("user_id", user_id).eq("topic", search_topic).execute()
-             if existing.data:
-                  logger.info(f"Returning cached quiz for topic: {search_topic}")
-                  return {"questions": existing.data[0]['questions']}
+        db_topic_save = save_topic if save_topic else topic
 
         ai_service = get_ai_service()
-        quiz = await ai_service.generate_quiz(content, num_questions, question_type)
+        quiz = await ai_service.generate_quiz(content, num_questions, question_type, topic)
         
-        if search_topic and quiz:
+        if quiz:
              try:
-                 print(f"DEBUG: Attempting to insert QUIZ. User: {user_id}, Topic: {search_topic}")
+                 if not db_topic_save:
+                    db_topic_save = get_next_untitled_topic(supabase, user_id)
+
+                 print(f"DEBUG: Attempting to insert QUIZ. User: {user_id}, Topic: {db_topic_save}")
                  supabase.table("ai_quizzes").insert({
                      "user_id": user_id,
-                     "topic": search_topic,
+                     "topic": db_topic_save,
                      "questions": quiz
                  }).execute()
                  print("DEBUG: Quiz insert success")
@@ -176,31 +200,27 @@ async def generate_quiz(
 async def generate_mindmap(
     content: str = Form(...),
     topic: Optional[str] = Form(None),
+    save_topic: Optional[str] = Form(None),
     user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase)
 ):
     """Generate mind map structure from content"""
     try:
         user_id = user.id
-        search_topic = topic
-        if not search_topic and len(content) < 200:
-             search_topic = content
-             
-        if search_topic:
-             existing = supabase.table("ai_mindmaps").select("*").eq("user_id", user_id).eq("topic", search_topic).execute()
-             if existing.data:
-                  logger.info(f"Returning cached mindmap for topic: {search_topic}")
-                  return {"mindmap": existing.data[0]['structure']}
-
+        db_topic_save = save_topic if save_topic else topic
+        
         ai_service = get_ai_service()
         mindmap = await ai_service.generate_mind_map_structure(content, topic)
         
-        if search_topic and mindmap:
+        if mindmap:
              try:
-                 print(f"DEBUG: Attempting to insert MINDMAP. User: {user_id}, Topic: {search_topic}")
+                 if not db_topic_save:
+                    db_topic_save = get_next_untitled_topic(supabase, user_id)
+
+                 print(f"DEBUG: Attempting to insert MINDMAP. User: {user_id}, Topic: {db_topic_save}")
                  supabase.table("ai_mindmaps").insert({
                      "user_id": user_id,
-                     "topic": search_topic,
+                     "topic": db_topic_save,
                      "structure": mindmap
                  }).execute()
                  print("DEBUG: Mindmap insert success")
@@ -252,6 +272,39 @@ async def process_pdf(
 
     except Exception as e:
         logger.error(f"Process PDF failed: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/save-notes")
+async def save_notes(
+    content: str = Form(...),
+    topic: str = Form(...),
+    user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase)
+):
+    """
+    Save provided text content as lecture notes directly.
+    Used for streaming responses where notes are generated client-side/streamed.
+    """
+    try:
+        user_id = user.id
+        
+        final_topic = topic
+        if not final_topic:
+             final_topic = get_next_untitled_topic(supabase, user_id)
+
+        print(f"DEBUG: Saving streamed notes. User: {user_id}, Topic: {final_topic}")
+        
+        data = {
+            "user_id": user_id,
+            "topic": final_topic,
+            "content": content
+        }
+        
+        res = supabase.table("lecture_notes").insert(data).execute()
+        return {"success": True, "topic": final_topic}
+
+    except Exception as e:
+        logger.error(f"Save Notes Error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
 

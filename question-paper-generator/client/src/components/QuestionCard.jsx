@@ -43,7 +43,6 @@ const QuestionCard = ({ question, onToggleStar, onDelete }) => {
     }
   };
 
-  console.log("Raw question text:", question.question_text);
 
   return (
     <div

@@ -60,6 +60,9 @@ class AIService:
         Generates text using the Nvidia VL model.
         Handles text or List of Base64 Image URIs.
         """
+        # Strengthen system instruction for JSON tasks
+        if "JSON" in system_instruction:
+            system_instruction += " IMPORTANT: Output ONLY valid JSON. Do not include any thinking, reasoning, chain-of-thought, or markdown code blocks outside the JSON. Do not output 'Wait' or 'Correction'."
         # Attempt to parse JSON string if it looks like a list
         if isinstance(content_input, str) and content_input.strip().startswith("["):
             try:
@@ -163,16 +166,31 @@ class AIService:
                 # Yield progress info (optional, but good for UI)
                 # yield json.dumps({"status": f"Analyzing pages {i+1} to {min(i+BATCH_SIZE, total_images)}..."}) + "\n"
 
+                # Auto-detect logic for streaming
+                # If we have content (which we always do in this streaming function), we ignore the provided topic for the PROMPT
+                # to avoid hallucination, as requested.
+                display_topic = "Auto-Detect"
+                prompt_header = "Step 1: Identify the main topic of this chunk."
+                constraint_text = "The content MUST be exclusively about the identified main topic."
+
+                # Logic that was here before is replaced by force-ignoring topic for prompt.
+                # display_topic = topic (Old) -> Now we ignore 'topic' argument for the prompt generation.
+
+
                 prompt = f"""
                 Analyze the provided document images (Part {chunk_index} of {total_chunks}) and provide detailed study notes.
-                Topic: {topic if topic else 'General'}
-                Ignore previous context, just analyze THESE pages.
+                {prompt_header}
                 
+                **STRICT CONTENT RULES**:
+                1.  **STRICT ADHERENCE**: {constraint_text}
+                2.  **NEGATIVE CONSTRAINT**: Do NOT discuss unrelated subjects. (e.g., If Physics, NO Biology. If History, NO Science).
+                3.  **SOURCE ONLY**: Use ONLY the provided document images. Do NOT hallucinate external information.
+ 
                 Return valid JSON matching the schema: {{ "analysis": "markdown string" }}
                 """
                 
                 try:
-                    response_text = await self._generate_with_retry(chunk_images, prompt, "You are an expert educator. Return only valid JSON.")
+                    response_text = await self._generate_with_retry(chunk_images, prompt, "You are a strict academic expert. Return only valid JSON.")
                     data = json_repair.loads(response_text)
                     notes_part = data.get("analysis", "")
                     
@@ -210,6 +228,11 @@ class AIService:
             prompt = f"""
             Create a comprehensive study guide for the topic: "{topic}".
             
+            **STRICT CONTENT RULES**:
+            1.  **STRICT ADHERENCE**: The content MUST be exclusively about "{topic}".
+            2.  **NEGATIVE CONSTRAINT**: Do NOT discuss unrelated subjects. (e.g., If Physics, NO Biology. If History, NO Science).
+            3.  **NO HALLUCINATIONS**: Do not generate generic filler content.
+
             Instructions:
             1. Write a detailed analysis.
             2. Use Markdown Headers.
@@ -222,10 +245,35 @@ class AIService:
             if isinstance(content, list) and len(content) > 10:
                  content = content[:10]
             
+            # Auto-detect topic logic
+            # Update: If content is present, we FORCE Auto-Detect logic for the prompt to ignore user topic
+            display_topic = None 
+            if not content:
+                 # Only use user topic if NO content is provided (Topic-only generation)
+                 display_topic = topic
+
+            prompt_header = ""
+            constraint_text = ""
+            
+            if not display_topic or display_topic == "None" or display_topic == "null":
+                display_topic = "Auto-Detect"
+                prompt_header = "Step 1: Identify the main topic of the provided content. Step 2: Create a comprehensive study guide based on that topic."
+                constraint_text = "The content MUST be exclusively about the identified main topic."
+                # Don't include "Topic: Auto-Detect" line in prompt
+                topic_line = "" 
+            else:
+                topic_line = f"Topic: {display_topic}"
+                constraint_text = f"The content MUST be exclusively about '{display_topic}'."
+
             prompt = f"""
             Analyze the provided document images/content and create a comprehensive study guide.
-            Topic: {topic if topic else 'General'}
+            {prompt_header} {topic_line}
             
+            **STRICT CONTENT RULES**:
+            1.  **STRICT ADHERENCE**: {constraint_text}
+            2.  **NEGATIVE CONSTRAINT**: Do NOT discuss unrelated subjects.
+            3.  **SOURCE BASED**: Base every point on the provided content.
+
             **CRITICAL FORMATTING RULES (Follow Strictly)**:
             1.  **Main Headers**: Use `## Header` for main topics.
             2.  **Sub Headers**: Use `### Subheader` for sub-topics.
@@ -248,14 +296,14 @@ class AIService:
 
         try:
              # If no images (topic only), we pass simple text content if possible or just use prompt
-            response_text = await self._generate_with_retry(image_content if image_content else topic, prompt, "You are an expert educator. Return only valid JSON.")
+            response_text = await self._generate_with_retry(image_content if image_content else topic, prompt, "You are a strict academic expert. Return only valid JSON.")
             data = json_repair.loads(response_text)
             return data.get("analysis", "")
         except Exception as e:
             logger.error(f"Generate Notes Error: {e}", exc_info=True)
             raise ValueError(f"Failed to generate notes: {str(e)}")
 
-    async def generate_flashcards(self, content: Union[str, List[str]], num_cards: int = 10) -> List[Dict[str, str]]:
+    async def generate_flashcards(self, content: Union[str, List[str]], num_cards: int = 10, topic: Optional[str] = None) -> List[Dict[str, str]]:
         if isinstance(content, str) and content.strip().startswith("["):
             try:
                 parsed = json.loads(content)
@@ -267,16 +315,43 @@ class AIService:
         input_content = content
         if isinstance(content, list) and len(content) > 10:
              input_content = content[:10]
-        elif not content:
+        elif not content and topic:
              # Topic based generation
+             input_content = f"Generate flashcards regarding the topic: {topic}"
+        elif not content:
              input_content = f"Generate flashcards regarding the general topic." # Fallback
+
+        # Auto-detect logic
+        # Update: Ignore topic for PROMPT if content is present
+        display_topic = None
+        if not content:
+             display_topic = topic
+
+        prompt_header = ""
+        constraint_text = ""
+        
+        if not display_topic or display_topic == "None" or display_topic == "null":
+             display_topic = "Auto-Detect"
+             prompt_header = "Step 1: Identify the main topic. Step 2: Create flashcards based on that topic."
+             constraint_text = "Flashcards MUST be strictly derived from the identified main topic."
+             topic_line = ""
+        else:
+             topic_line = f"Topic: {display_topic}"
+             constraint_text = f"Flashcards MUST be strictly derived from the provided content/topic '{display_topic}'."
 
         prompt = f"""
         Create {num_cards} flashcards based on the provided material.
+        {prompt_header} {topic_line}
+        
+        **STRICT CONTENT RULES**:
+        1.  **RELEVANCE**: {constraint_text}
+        2.  **NEGATIVE CONSTRAINT**: Do NOT create cards for unrelated topics. (e.g., No Biology cards for Physics material).
+        3.  **ACCURACY**: Ensure definitions are precise and academic.
+
         Return a valid JSON object with a key 'flashcards' which is a list of objects, each having 'term' and 'definition'.
         """
         try:
-            response_text = await self._generate_with_retry(input_content, prompt, "You are an expert educator. Return only valid JSON.")
+            response_text = await self._generate_with_retry(input_content, prompt, "You are a strict academic expert. Return only valid JSON.")
             data = json_repair.loads(response_text)
             flashcards = data.get("flashcards", [])
             return [{"front": f.get("term"), "back": f.get("definition")} for f in flashcards]
@@ -284,10 +359,10 @@ class AIService:
             logger.error(f"Generate Flashcards Error: {e}", exc_info=True)
             return []
 
-    async def generate_quiz(self, content: Union[str, List[str]], num_questions: int = 10, question_type: str = "mixed") -> List[Dict]:
+    async def generate_quiz(self, content: Union[str, List[str]], num_questions: int = 10, question_type: str = "mixed", topic: Optional[str] = None) -> List[Dict]:
         if not content and isinstance(content, str): # Handle empty string topic case if passed as content
              pass 
-
+        
         # Check if content needs parsing
         if isinstance(content, str) and content.strip().startswith("["):
              try:
@@ -296,14 +371,38 @@ class AIService:
                      content = parsed
              except: pass
 
-        source_display = "Provided Document Images" if isinstance(content, list) else (content[:200] if content else 'Topic: ' + str(question_type))
+        # Auto-detect logic
+        # Update: Ignore topic for PROMPT if content is present
+        display_topic = None
+        if not content:
+             display_topic = topic
+
+        prompt_header = ""
+        constraint_text = ""
+        
+        if not display_topic or display_topic == "None" or display_topic == "null":
+             display_topic = "Auto-Detect"
+             prompt_header = "Step 1: Identify the main topic. Step 2: Create questions based on that topic."
+             constraint_text = "ALL questions must be derived *directly* from the identified topic."
+             topic_line = ""
+        else:
+             topic_line = f"Topic: {display_topic}"
+             constraint_text = f"ALL questions must be derived *directly* from the provided content/topic '{display_topic}'."
+
+        source_display = "Provided Document Images" if isinstance(content, list) else (display_topic if topic else (content[:200] if content else 'Topic: ' + str(question_type)))
         
         # Quiz Prompt Update
         prompt = f"""
         Create {num_questions} quiz questions.
         Source Material: {source_display} 
         Type: {question_type}
+        {prompt_header} {topic_line}
         
+        **STRICT CONTENT RULES**:
+        1.  **STRICT RELEVANCE**: {constraint_text}
+        2.  **NEGATIVE CONSTRAINT**: Do NOT ask about unrelated fields. (e.g., No Chemistry questions in a History quiz).
+        3.  **NO AMBIGUITY**: Questions must have one clear correct answer.
+
         **CRITICAL INSTRUCTION**: Ensure a mix of difficulties:
         - Include at least 2 'HARD' (Very Difficult) questions.
         - The rest should be a mix of 'EASY' and 'MEDIUM'.
@@ -315,17 +414,24 @@ class AIService:
         - 'correct_answer': The correct answer string.
         - 'explanation': Brief explanation.
         - 'difficulty': 'EASY', 'MEDIUM', or 'HARD'.
+
+        **ANTI-HALLUCINATION & FORMATTING**:
+        - Output ONLY raw JSON. No markdown ticks.
+        - Do NOT output your internal monologue or "thinking" process (e.g., "Wait, let me calculate...").
+        - Ensure ALL questions are unique. Do not duplicate questions.
         """
         
         # Adjust input for _generate_with_retry
         input_content = content
         if isinstance(content, list) and len(content) > 10:
              input_content = content[:10]
+        elif not content and topic:
+             input_content = f"Generate {question_type} questions strictly about the topic: {topic}"
         elif not content:
              input_content = f"Generate questions about {question_type}" # Fallback if topic is passed elsewhere
 
         try:
-            response_text = await self._generate_with_retry(input_content, prompt, "You are an expert educator. Return only valid JSON.")
+            response_text = await self._generate_with_retry(input_content, prompt, "You are a strict academic expert. Return only valid JSON.")
             data = json_repair.loads(response_text)
             return data.get("questions", [])
         except Exception as e:
@@ -343,8 +449,31 @@ class AIService:
                     content = parsed
             except: pass
 
+        # Auto-detect logic
+        # Update: Ignore topic for PROMPT if content is present
+        display_topic = None
+        if not content:
+             display_topic = topic
+
+        prompt_header = ""
+        constraint_text = ""
+        
+        if not display_topic or display_topic == "None" or display_topic == "null":
+             display_topic = "Auto-Detect"
+             prompt_header = "Step 1: Identify the main topic. Step 2: Create the structure."
+             constraint_text = "All nodes must be strictly related to the identified central topic."
+             topic_line = ""
+        else:
+             topic_line = f"Topic: {display_topic}"
+             constraint_text = f"All nodes must be strictly related to the central topic: '{display_topic}'."
+
         prompt = f"""
-        Create a hierarchical mind map structure for the topic: {topic if topic else 'the provided content'}.
+        Create a hierarchical mind map structure.
+        {prompt_header} {topic_line}
+        
+        **STRICT CONTENT RULES**:
+        1.  **RELEVANCE**: {constraint_text}
+        2.  **NEGATIVE CONSTRAINT**: Eliminate any node that is off-topic or generic filler.
         
         **CRITICAL INSTRUCTION**: Create a STRICT TREE STRUCTURE.
         - A single '0' level Root Node.
@@ -366,7 +495,7 @@ class AIService:
              input_content = f"Topic: {topic}"
 
         try:
-            response_text = await self._generate_with_retry(input_content, prompt, "You are an expert educator. Return only valid JSON.")
+            response_text = await self._generate_with_retry(input_content, prompt, "You are a strict academic expert. Return only valid JSON.")
             return json_repair.loads(response_text)
         except Exception as e:
             logger.error(f"Generate Mind Map Error: {e}", exc_info=True)

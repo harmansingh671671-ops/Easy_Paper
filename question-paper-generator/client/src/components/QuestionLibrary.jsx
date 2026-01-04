@@ -33,51 +33,48 @@ function QuestionLibrary({ showCreateButton = true, enableSelection = false, sel
   const { paperQuestions, getTotalMarks } = usePaper();
 
   // Sync filters with user profile when it loads (handling async updates)
+  // We use a ref to track if we have initialized filters from the profile to prevent double-fetching
+  const [isInitialized, setIsInitialized] = useState(!!user);
+
   useEffect(() => {
-    if (user) {
+    if (user && !isInitialized) {
       setFilters(prev => ({
         ...prev,
         category: user.category || prev.category,
-        // Reset/Update fields based on current profile strictly. 
-        // Do NOT fall back to 'prev.grade' if user is student; we must match their profile exactly.
         grade: user.role === 'student' ? (user.selected_grades?.[0] || '') : prev.grade,
         year: user.role === 'student' ? (user.selected_years?.[0] || '') : prev.year,
         exam: user.role === 'student' ? (user.target_exam || '') : prev.exam,
       }));
+      setIsInitialized(true);
     }
-  }, [user]);
+  }, [user, isInitialized]);
 
   // Fetch questions when filters change
   useEffect(() => {
-    // wait for profile to load
-    if (profileLoading) return;
-    fetchQuestions();
-  }, [filters, user?.category, profileLoading]);
+    // wait for profile to load and initialization to complete
+    if (profileLoading || (user && !isInitialized)) return;
 
-  const fetchQuestions = async () => {
+    const controller = new AbortController();
+    fetchQuestions(controller.signal);
+
+    return () => {
+      controller.abort();
+    };
+  }, [filters, user, profileLoading, isInitialized]);
+
+  const fetchQuestions = async (signal) => {
     // 1. Guard against loading state
     if (profileLoading) return;
 
     // 2. Guard for Students: Do NOT fetch "everything" if filters are momentarily empty during init
-    // Only fetch if they have at least one specific filter relevant to their category
     const isStudent = user?.role === 'student';
-    if (isStudent && user?.category === 'school' && !filters.grade && !filters.search) {
-      // Don't fetch yet, wait for filter sync
-      return;
-    }
-    if (isStudent && user?.category === 'college' && !filters.year && !filters.search) {
-      return;
-    }
-    if (isStudent && user?.category === 'competition' && !filters.exam && !filters.search) {
-      return;
-    }
+    if (isStudent && user?.category === 'school' && !filters.grade && !filters.search) return;
+    if (isStudent && user?.category === 'college' && !filters.year && !filters.search) return;
+    if (isStudent && user?.category === 'competition' && !filters.exam && !filters.search) return;
 
     try {
       setLoading(true);
       setError(null);
-
-      // Enforce student constraints strictly before fetch
-      const isTeacher = user?.role === 'teacher';
 
       const cleanFilters = {
         ...Object.fromEntries(
@@ -92,8 +89,8 @@ function QuestionLibrary({ showCreateButton = true, enableSelection = false, sel
         if (user.target_exam) cleanFilters.exam = user.target_exam;
       }
 
-      if (isTeacher) {
-        // If no specific grade selected in filter, restrain to ALL selected grades
+      // Teacher logic remains the same
+      if (user?.role === 'teacher') {
         if (!cleanFilters.grade && user.selected_grades?.length) {
           cleanFilters.grade = user.selected_grades;
         }
@@ -102,14 +99,26 @@ function QuestionLibrary({ showCreateButton = true, enableSelection = false, sel
         }
       }
 
-      const data = await questionService.getAllQuestions(cleanFilters);
+      const data = await questionService.getAllQuestions(cleanFilters, { signal });
       setQuestions(data.questions);
       setTotalQuestions(data.total);
     } catch (err) {
+      if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') {
+        // Request was canceled, ignore
+        return;
+      }
       setError('Failed to load questions. Please try again.');
       console.error(err);
     } finally {
-      setLoading(false);
+      // Create a local variable or check if still mounted/not aborted?
+      // Actually with AbortController, we usually don't need to check mounted state heavily
+      // but we should ensure we don't set loading false if we cancelled?
+      // If cancelled, we returned early above, so we are good.
+      // But we need to make sure we don't clobber state from a NEW request if this was an OLD request that finished late.
+      // The AbortController handles the "stale request" part by rejecting it.
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 
