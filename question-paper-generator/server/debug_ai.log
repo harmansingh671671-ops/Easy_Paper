@@ -14641,3 +14641,9 @@ Exception: Failed to generate content after exhausting all retry attempts.
 2026-01-04 13:40:17,646 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...ac72
 2026-01-04 13:40:40,908 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...ac72
 2026-01-04 13:41:57,771 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...ac72
+2026-01-04 13:46:28,740 - INFO - Converted PDF to 2 images
+2026-01-04 13:46:28,741 - INFO - Processing Batch 1/1 (2 pages)
+2026-01-04 13:46:29,273 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...ac72
+2026-01-04 13:46:39,551 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...ac72
+2026-01-04 13:47:03,914 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...ac72
+2026-01-04 13:47:28,738 - DEBUG - Sending request to nvidia/nemotron-nano-12b-v2-vl:free with key ...ac72

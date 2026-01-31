@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, model_validator
 from typing import Optional, List
 from enum import Enum
 from datetime import datetime
@@ -44,6 +44,27 @@ class QuestionBase(BaseModel):
     # Metadata
     marks: int = Field(default=1, ge=1)
     is_starred: bool = False
+
+    @model_validator(mode='after')
+    def validate_category_grades(self):
+        category = self.category
+        grade = self.class_grade
+        
+        if not category or not grade:
+            return self
+
+        cat_lower = category.lower()
+        if cat_lower in ['school', 'competition']:
+            valid_grades = [str(i) for i in range(1, 13)] # "1".."12"
+            if grade not in valid_grades:
+                raise ValueError(f"For {category}, class_grade must be one of {valid_grades}")
+        
+        elif cat_lower == 'college':
+            valid_grades = ['1st', '2nd', '3rd', '4th']
+            if grade not in valid_grades:
+                raise ValueError(f"For College, class_grade must be one of {valid_grades}")
+        
+        return self
 
 # Request Model (for creating/updating questions)
 class QuestionCreate(QuestionBase):

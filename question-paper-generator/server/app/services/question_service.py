@@ -115,8 +115,8 @@ class QuestionService:
         offset = (page - 1) * page_size
         query = query.range(offset, offset + page_size - 1)
         
-        # Order by created_at descending
-        query = query.order("created_at", desc=True)
+        # Order by class_grade (asc) then created_at (desc)
+        query = query.order("class_grade", desc=False).order("created_at", desc=True)
         
         # Execute query
         response = query.execute()

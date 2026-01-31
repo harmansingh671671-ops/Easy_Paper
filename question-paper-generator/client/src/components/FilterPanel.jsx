@@ -109,7 +109,7 @@ const FilterPanel = ({ filters, onFilterChange, onClearFilters, openCreateModal 
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="">All Grades</option>
-              {['12th', '11th', '10th', '9th', '8th', '7th', '6th', '5th', '4th', '3rd', '2nd', '1st']
+              {['12', '11', '10', '9', '8', '7', '6', '5', '4', '3', '2', '1']
                 .filter(grade => !profile?.selected_grades?.length || profile.selected_grades.includes(grade))
                 .map((g) => (
                   <option key={g} value={g}>{g}</option>
@@ -129,7 +129,7 @@ const FilterPanel = ({ filters, onFilterChange, onClearFilters, openCreateModal 
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="">All Years</option>
-              {['1st Year', '2nd Year', '3rd Year', '4th Year']
+              {['1st', '2nd', '3rd', '4th']
                 .filter(year => !profile?.selected_years?.length || profile.selected_years.includes(year))
                 .map((y) => (
                   <option key={y} value={y}>{y}</option>

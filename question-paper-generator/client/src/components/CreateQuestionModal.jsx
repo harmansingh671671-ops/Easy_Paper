@@ -8,6 +8,7 @@ const CreateQuestionModal = ({ isOpen, onRequestClose, onQuestionCreated }) => {
     question_text: '',
     subject: 'Mathematics',
     class_grade: '12',
+    category: 'school',
     difficulty: 'EASY',
     marks: 1,
     question_type: 'MCQ',
@@ -45,7 +46,7 @@ const CreateQuestionModal = ({ isOpen, onRequestClose, onQuestionCreated }) => {
     resetForm();
     onRequestClose();
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -81,7 +82,7 @@ const CreateQuestionModal = ({ isOpen, onRequestClose, onQuestionCreated }) => {
           <X size={24} />
         </button>
       </div>
-      
+
       {creationSuccess ? (
         <div className="text-center py-4">
           <p className="text-lg text-gray-700 mb-6">What would you like to do next?</p>
@@ -112,6 +113,33 @@ const CreateQuestionModal = ({ isOpen, onRequestClose, onQuestionCreated }) => {
             </div>
           </div>
   
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select id="category" name="category" value={formData.category} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                <option value="school">School</option>
+                <option value="college">College</option>
+                <option value="competition">Competition</option>
+              </select>
+            </div>
+            <div>
+              {formData.category === 'college' ? (
+                <>
+                  <label htmlFor="class_grade" className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                  <select id="class_grade" name="class_grade" value={formData.class_grade} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    {['1st', '2nd', '3rd', '4th'].map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </>
+              ) : (
+                <>
+                  <label htmlFor="class_grade" className="block text-sm font-medium text-gray-700 mb-1">Class</label>
+                  <select id="class_grade" name="class_grade" value={formData.class_grade} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    {['12', '11', '10', '9', '8', '7', '6', '5', '4', '3', '2', '1'].map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </>
+              )}
+            </div>
+          </div>
+  
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
@@ -137,44 +165,45 @@ const CreateQuestionModal = ({ isOpen, onRequestClose, onQuestionCreated }) => {
           </div>
           
           {formData.question_type === 'MCQ' && (
-            <div className="grid grid-cols-2 gap-4">
-              {['a', 'b', 'c', 'd'].map(opt => (
-                <div key={opt}>
-                  <label htmlFor={`option_${opt}`} className="block text-sm font-medium text-gray-700 mb-1">Option {opt.toUpperCase()}</label>
-                  <input type="text" id={`option_${opt}`} name={`option_${opt}`} value={formData[`option_${opt}`]} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-                </div>
-              ))}
+        <div className="grid grid-cols-2 gap-4">
+          {['a', 'b', 'c', 'd'].map(opt => (
+            <div key={opt}>
+              <label htmlFor={`option_${opt}`} className="block text-sm font-medium text-gray-700 mb-1">Option {opt.toUpperCase()}</label>
+              <input type="text" id={`option_${opt}`} name={`option_${opt}`} value={formData[`option_${opt}`]} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
             </div>
-          )}
-  
-          <div>
-            <label htmlFor="answer_text" className="block text-sm font-medium text-gray-700 mb-1">Answer</label>
-            <input type="text" id="answer_text" name="answer_text" value={formData.answer_text} onChange={handleInputChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-          </div>
-  
-          <div>
-            <label htmlFor="detailed_solution" className="block text-sm font-medium text-gray-700 mb-1">Detailed Solution</label>
-            <textarea id="detailed_solution" name="detailed_solution" value={formData.detailed_solution} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" rows="3"></textarea>
-          </div>
-          
-          <div>
-            <label htmlFor="source" className="block text-sm font-medium text-gray-700 mb-1">Source</label>
-            <input type="text" id="source" name="source" value={formData.source} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-          </div>
-  
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-  
-          <div className="flex justify-end gap-4 pt-4">
-            <button type="button" onClick={handleClose} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
-              Cancel
-            </button>
-            <button type="submit" disabled={isSubmitting} className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400">
-              {isSubmitting ? 'Creating...' : 'Create Question'}
-            </button>
-          </div>
-        </form>
+          ))}
+        </div>
       )}
-    </Modal>
+
+      <div>
+        <label htmlFor="answer_text" className="block text-sm font-medium text-gray-700 mb-1">Answer</label>
+        <input type="text" id="answer_text" name="answer_text" value={formData.answer_text} onChange={handleInputChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+      </div>
+
+      <div>
+        <label htmlFor="detailed_solution" className="block text-sm font-medium text-gray-700 mb-1">Detailed Solution</label>
+        <textarea id="detailed_solution" name="detailed_solution" value={formData.detailed_solution} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" rows="3"></textarea>
+      </div>
+
+      <div>
+        <label htmlFor="source" className="block text-sm font-medium text-gray-700 mb-1">Source</label>
+        <input type="text" id="source" name="source" value={formData.source} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+      </div>
+
+      {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
+      <div className="flex justify-end gap-4 pt-4">
+        <button type="button" onClick={handleClose} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
+          Cancel
+        </button>
+        <button type="submit" disabled={isSubmitting} className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400">
+          {isSubmitting ? 'Creating...' : 'Create Question'}
+        </button>
+      </div>
+    </form>
+  )
+}
+    </Modal >
   );
 };
 
