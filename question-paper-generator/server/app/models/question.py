@@ -41,10 +41,15 @@ class QuestionBase(BaseModel):
     detailed_solution: Optional[str] = None
     hint: Optional[str] = None
     
+    
     # Metadata
     marks: int = Field(default=1, ge=1)
     is_starred: bool = False
 
+# Request Model (for creating/updating questions)
+# Request Model (for creating/updating questions)
+class QuestionCreate(QuestionBase):
+    """Used when creating a new question"""
     @model_validator(mode='after')
     def validate_category_grades(self):
         category = self.category
@@ -65,11 +70,6 @@ class QuestionBase(BaseModel):
                 raise ValueError(f"For College, class_grade must be one of {valid_grades}")
         
         return self
-
-# Request Model (for creating/updating questions)
-class QuestionCreate(QuestionBase):
-    """Used when creating a new question"""
-    pass
 
 class QuestionUpdate(BaseModel):
     """Used when updating a question (all fields optional)"""
